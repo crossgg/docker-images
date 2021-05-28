@@ -12,7 +12,7 @@ To run this container in the correct way requires some special options to give i
 
     docker run --name zerotier-one --device=/dev/net/tun --net=host \
       --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
-      -v /var/lib/zerotier-one:/var/lib/zerotier-one zyclonite/zerotier
+      -v /var/lib/zerotier-one:/var/lib/zerotier-one q123458384/zerotierone
 
 
 This runs zyclonite/zerotier in a container with special network admin permissions and with access to the host's network stack (no network isolation) and /dev/net/tun to create tun/tap devices. This will allow it to create zt# interfaces on the host the way a copy of ZeroTier One running on the host would normally be able to.
@@ -23,7 +23,9 @@ It also mounts /var/lib/zerotier-one to /var/lib/zerotier-one inside the contain
 
 To join a zerotier network you can use
 
-    docker exec zerotier-one /zerotier-cli join 8056c2e21c000001
+    docker exec -it zerotier-one /bin/sh
+	
+	zerotier-cli join 8056c2e21c000001
 
 
 or create an empty file with the network as name
