@@ -45,8 +45,8 @@ RUN \
     install_app_icon.sh "$APP_ICON_URL"
 
 # Add files.
-COPY rootfs/ /
-COPY VERSION /
+COPY tinymediamanager4/rootfs/ /
+COPY tinymediamanager4/VERSION /
 
 # Set environment variables.
 ENV APP_NAME="TinyMediaManager" \
