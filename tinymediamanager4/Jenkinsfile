@@ -1,6 +1,6 @@
 pipeline {
   environment {
-    registry = "romancin/tinymediamanager"
+    registry = "q123458384/tinymediamanager"
     repository = "tinymediamanager"
     withCredentials = 'dockerhub'
     registryCredential = 'dockerhub'
