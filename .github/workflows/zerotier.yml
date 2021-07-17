@@ -30,4 +30,4 @@ jobs:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           push: true
           tags: |
-            q123458384/zerotierone:latest
+            ${{ secrets.DOCKER_USERNAME }}/zerotierone:latest

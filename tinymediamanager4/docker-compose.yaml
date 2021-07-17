@@ -7,8 +7,8 @@ tinymediamanager_service:
       - USER_ID=0
       - GROUP_ID=0
       - TZ=Asia/Shanghai
-      - VNC_PASSWORD=password
-      - ENABLE_CJK_FONT=1
+      - ENABLE_CJK_FONT=1  #enable chinese font
+  #   - VNC_PASSWORD=password 
     volumes:
       - ./tinymediamanager4:/config:rw
       - /share/Container/tinymediamanager4/media:/media:rw
