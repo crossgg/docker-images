@@ -1,4 +1,4 @@
-name: 构建zerotier镜像
+name: typecho
 on:
   #防止fork乱用action设置只能手动触发构建
   workflow_dispatch:
