@@ -14,7 +14,7 @@ RUN set -x \
 
 WORKDIR /var/www/html
 
-COPY entrypoint.sh /usr/local/bin/
+COPY typecho/entrypoint.sh /usr/local/bin/
 
 EXPOSE 80
 
