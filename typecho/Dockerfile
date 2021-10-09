@@ -1,13 +1,12 @@
 FROM php:7.1-apache
 
 ENV TYPECHO_VERSION=1.0
-ENV TYPECHO_URL="https://github.com/typecho/typecho/releases/download/v1.1-17.10.30-release/1.1.17.10.30.-release.tar.gz"
+ENV TYPECHO_URL="https://github.com/typecho/typecho.git"
 
 RUN set -x \
   && mkdir -p /usr/src/typecho \
-  && apt-get update && apt-get install -y --no-install-recommends ca-certificates wget && rm -rf /var/lib/apt/lists/* \
-  && wget -O /tmp/typecho.tar.gz "$TYPECHO_URL" \
-  && tar -xzf /tmp/typecho.tar.gz -C /usr/src/typecho/ --strip-components=1 \
+  && apt-get update && apt-get install -y --no-install-recommends ca-certificates wget git && rm -rf /var/lib/apt/lists/* \
+  && git clone https://github.com/typecho/typecho.git /usr/src/typecho/ \
   && apt-get purge -y --auto-remove ca-certificates wget \
   && rm -rf /var/cache/apk/* \
   && rm -rf /tmp/*
