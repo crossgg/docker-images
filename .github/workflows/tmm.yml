@@ -30,4 +30,4 @@ jobs:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/tinymediamanager:4.0.6crack
+            ${{ secrets.DOCKER_USERNAME }}/tinymediamanager:4.0.6
