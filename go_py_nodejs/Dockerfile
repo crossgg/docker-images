@@ -37,11 +37,11 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && pnpm install -g png-js crypto-js download got http-server request tough-cookie tunnel ws \
     && rm -rf /root/.npm \
     && pnpm install --prod \
-    && rm -rf /root/.pnpm-store 
+    && rm -rf /root/.pnpm-store \
     && rm -rf /var/cache/apk/* \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone \
-    && touch ~/.bashrc \	
+    && touch ~/.bashrc \
     ## 安装go环境 ##
     && cd /usr/local \
     && wget https://golang.google.cn/dl/go1.17.1.linux-amd64.tar.gz \
@@ -52,7 +52,8 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && export GOPROXY=https://goproxy.cn \
     && export GOROOT=/usr/local/go \
     && export GOPATH=/usr/local/go/path \
-    && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+    && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin \
+    && touch ~/.bashrc 
 
 ## Add files ##
 COPY xdd-plus/docker-entrypoint.sh ${WORKDIR}/docker-entrypoint.sh
