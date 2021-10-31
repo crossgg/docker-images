@@ -27,7 +27,7 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
                              jq \
                              openssh \
                              build-base \
-			     gcc \
+							 gcc \
                              g++ \
                              cairo-dev \
                              pango-dev \
@@ -41,10 +41,9 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && rm -rf /var/cache/apk/* \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone \
-    && touch ~/.bashrc 
-    
-## 安装go环境 ##
-RUN cd /usr/local \
+    && touch ~/.bashrc \	
+    ## 安装go环境 ##
+    && cd /usr/local \
     && wget https://golang.google.cn/dl/go1.17.1.linux-amd64.tar.gz \
     && rm -rf /usr/local/go \
     && tar -C /usr/local -xzf go1.17.1.linux-amd64.tar.gz \
@@ -54,7 +53,6 @@ RUN cd /usr/local \
     && export GOROOT=/usr/local/go \
     && export GOPATH=/usr/local/go/path \
     && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-
 
 ## Add files ##
 COPY xdd-plus/docker-entrypoint.sh ${WORKDIR}/docker-entrypoint.sh
