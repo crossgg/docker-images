@@ -35,21 +35,20 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && rm -rf /var/cache/apk/* \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone \
-    && touch ~/.bashrc \
-    && mkdir /run/nginx \
-
+    && touch ~/.bashrc 
 
 ## 安装go环境
 RUN cd /usr/local \
     && wget https://golang.google.cn/dl/go1.17.1.linux-amd64.tar.gz \
 	&& rm -rf /usr/local/go \
 	&& tar -C /usr/local -xzf go1.17.1.linux-amd64.tar.gz \
-	&& rm go1.17.1.linux-amd64.tar.gz
-	&& export GO111MODULE=on
-	&& export GOPROXY=https://goproxy.cn
-	&& export GOROOT=/usr/local/go
-	&& export GOPATH=/usr/local/go/path
-	&& export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+	&& rm go1.17.1.linux-amd64.tar.gz \
+	&& export GO111MODULE=on \
+	&& export GOPROXY=https://goproxy.cn \
+	&& export GOROOT=/usr/local/go \
+	&& export GOPATH=/usr/local/go/path \
+	&& export PATH=$PATH:$GOROOT/bin:$GOPATH/bin \
+    && touch ~/.bashrc 
 
 ## 编译 XDD
 RUN git clone -b ${XDD_BRANCH} ${XDD_URL} ${XDD_DIR} \
@@ -58,7 +57,7 @@ RUN git clone -b ${XDD_BRANCH} ${XDD_URL} ${XDD_DIR} \
     && git config --global pull.rebase true \
     && cd ${XDD_DIR} \
     && chmod 777 ${XDD_DIR}/docker-entrypoint.sh \
-	&& go build -o xdd
+	&& go build -o xdd \
     && npm install -g pnpm \
     && pnpm install -g pm2 \
     && pnpm install -g png-js crypto-js download got http-server request tough-cookie tunnel ws \
