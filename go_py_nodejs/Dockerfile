@@ -27,12 +27,12 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
                              jq \
                              openssh \
                              build-base \
-							 gcc \
+			     gcc \
                              g++ \
                              cairo-dev \
                              pango-dev \
                              giflib-dev \
-	&& npm install -g pnpm \
+    && npm install -g pnpm \
     && pnpm install -g pm2 \
     && pnpm install -g png-js crypto-js download got http-server request tough-cookie tunnel ws \
     && rm -rf /root/.npm \
@@ -42,20 +42,21 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone \
     && touch ~/.bashrc 
-## 安装go环境
+    
+## 安装go环境 ##
 RUN cd /usr/local \
     && wget https://golang.google.cn/dl/go1.17.1.linux-amd64.tar.gz \
-	&& rm -rf /usr/local/go \
-	&& tar -C /usr/local -xzf go1.17.1.linux-amd64.tar.gz \
-	&& rm go1.17.1.linux-amd64.tar.gz
-	&& export GO111MODULE=on
-	&& export GOPROXY=https://goproxy.cn
-	&& export GOROOT=/usr/local/go
-	&& export GOPATH=/usr/local/go/path
-	&& export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+    && rm -rf /usr/local/go \
+    && tar -C /usr/local -xzf go1.17.1.linux-amd64.tar.gz \
+    && rm go1.17.1.linux-amd64.tar.gz \
+    && export GO111MODULE=on \
+    && export GOPROXY=https://goproxy.cn \
+    && export GOROOT=/usr/local/go \
+    && export GOPATH=/usr/local/go/path \
+    && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
 
-# Add files.
+## Add files ##
 COPY xdd-plus/docker-entrypoint.sh ${WORKDIR}/docker-entrypoint.sh
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
