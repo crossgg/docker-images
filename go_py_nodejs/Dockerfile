@@ -41,9 +41,7 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && rm -rf /var/cache/apk/* \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone \
-    && touch ~/.bashrc \
-    && mkdir /app
-
+    && touch ~/.bashrc 
 ## 安装go环境
 RUN cd /usr/local \
     && wget https://golang.google.cn/dl/go1.17.1.linux-amd64.tar.gz \
