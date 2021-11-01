@@ -54,7 +54,7 @@ RUN cd /usr/local \
 RUN git clone -b ${XDD_BRANCH} ${XDD_URL} ${XDD_DIR} \
     && git config --global user.email "hzoo@vip.qq.com" \
     && git config --global user.name "q123458384" \
-    && git config --global pull.rebase true
+    && git config --global pull.rebase true \
     && cd ${XDD_DIR} \
 	&& go build -o xdd
 
