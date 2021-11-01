@@ -56,7 +56,7 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && touch ~/.bashrc 
 
 ## Add files . ##
-RUN mkdir -p /shell
+RUN mkdir -p /shell /
     && mkdir -p /app/log
 
 COPY go_py_nodejs/docker-entrypoint.sh /shell/docker-entrypoint.sh

@@ -54,14 +54,14 @@ RUN cd /usr/local \
 RUN git clone -b ${XDD_BRANCH} ${XDD_URL} ${XDD_DIR} \
     && git config --global user.email "hzoo@vip.qq.com" \
     && git config --global user.name "q123458384" \
-    && git config --global pull.rebase true \
-    && cd ${XDD_DIR} \
+    && git config --global pull.rebase true
+ 
+RUN cd ${XDD_DIR} \
 	&& go build -o xdd \
     && npm install -g pnpm \
     && pnpm install -g pm2 \
     && pnpm install -g png-js crypto-js download got http-server request tough-cookie tunnel ws \
     && rm -rf /root/.npm \
-    && pnpm install --prod \
     && rm -rf /root/.pnpm-store 
 
 # Add files.
