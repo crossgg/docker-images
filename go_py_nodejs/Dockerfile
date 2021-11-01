@@ -59,8 +59,8 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 RUN mkdir -p /shell
     && mkdir -p /app/log
 
-COPY xdd-plus/docker-entrypoint.sh /shell/docker-entrypoint.sh
-COPY xdd-plus/extra.sample.sh /app/extra.sh
+COPY go_py_nodejs/docker-entrypoint.sh /shell/docker-entrypoint.sh
+COPY go_py_nodejs/extra.sample.sh /app/extra.sh
 RUN chmod 777 /shell/docker-entrypoint.sh
 RUN chmod 777 /app/extra.sh
 
