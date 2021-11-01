@@ -6,8 +6,8 @@ ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     LANG=zh_CN.UTF-8 \
     SHELL=/bin/bash \
     PS1="\u@\h:\w \$ " \
-    WORKDIR=/app \
-	ENABLE_WEB_PM2=false
+	ENABLE_EXTRA=false
+	
 
 WORKDIR ${WORKDIR}
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
@@ -55,7 +55,13 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin \
     && touch ~/.bashrc 
 
-## Add files ##
-COPY xdd-plus/docker-entrypoint.sh ${WORKDIR}/docker-entrypoint.sh
+## Add files . ##
+RUN mkdir -p /shell
+    && mkdir -p /app/log
 
-ENTRYPOINT ["./docker-entrypoint.sh"]
+COPY xdd-plus/docker-entrypoint.sh /shell/docker-entrypoint.sh
+COPY xdd-plus/extra.sample.sh /app/extra.sh
+RUN chmod 777 /shell/docker-entrypoint.sh
+RUN chmod 777 /app/extra.sh
+
+ENTRYPOINT ["/shell/docker-entrypoint.sh"]
