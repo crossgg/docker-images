@@ -9,7 +9,7 @@ ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
 	ENABLE_EXTRA=false
 	
 
-WORKDIR ${WORKDIR}
+WORKDIR \app
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
     && apk update -f \
     && apk upgrade \
@@ -56,8 +56,8 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && touch ~/.bashrc 
 
 ## Add files . ##
-RUN mkdir -p /shell /
-    && mkdir -p /app/log
+RUN mkdir -p /shell
+RUN mkdir -p /app/log
 
 COPY go_py_nodejs/docker-entrypoint.sh /shell/docker-entrypoint.sh
 COPY go_py_nodejs/extra.sample.sh /app/extra.sh
