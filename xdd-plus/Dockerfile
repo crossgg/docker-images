@@ -56,7 +56,6 @@ RUN git clone -b ${XDD_BRANCH} ${XDD_URL} ${XDD_DIR} \
     && git config --global user.name "q123458384" \
     && git config --global pull.rebase true \
     && cd ${XDD_DIR} \
-    && chmod 777 ${XDD_DIR}/docker-entrypoint.sh \
 	&& go build -o xdd \
     && npm install -g pnpm \
     && pnpm install -g pm2 \
@@ -66,6 +65,9 @@ RUN git clone -b ${XDD_BRANCH} ${XDD_URL} ${XDD_DIR} \
     && rm -rf /root/.pnpm-store 
 
 # Add files.
+RUN mkdir -p /shell && mkdir -p /${XDD_DIR}/log
+
 COPY xdd-plus/docker-entrypoint.sh ${XDD_DIR}/docker-entrypoint.sh
+RUN chmod 777 /shell/docker-entrypoint.sh && chmod a+x /shell/docker-entrypoint.sh
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
