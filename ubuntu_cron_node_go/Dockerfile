@@ -18,21 +18,20 @@ RUN cd /usr/local \
 	&& tar -C /usr/local -xzf go1.17.1.linux-amd64.tar.gz \
 	&& rm go1.17.1.linux-amd64.tar.gz \
 	&& echo "export GO111MODULE=on" > \etc\profile  \
-	&& echo "export GOPROXY=https://goproxy.cn" > \etc\profile \
-	&& echo "export GOROOT=/usr/local/go" > \etc\profile \
-	&& echo "export GOPATH=/usr/local/go/path" > \etc\profile \
-	&& echo "export PATH=$PATH:$GOROOT/bin:$GOPATH/bin" > \etc\profile \
+	&& echo "export GOPROXY=https://goproxy.cn" > /etc/profile \
+	&& echo "export GOROOT=/usr/local/go" > /etc/profile \
+	&& echo "export GOPATH=/usr/local/go/path" > /etc/profile \
+	&& echo "export PATH=$PATH:$GOROOT/bin:$GOPATH/bin" > /etc/profile \
 	&& source /etc/profile \
 	&& echo "source /etc/profile" > ~/.bashrc 
 
 ## 安装nodejs
-## RUN curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash - \
-##	&& apt-get install -y nodejs
-## RUN npm config set registry http://registry.npm.taobao.org/
+RUN curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash - \
+	&& apt-get install -y nodejs
+RUN npm config set registry http://registry.npm.taobao.org/
+RUN npm install -g pm2
 
-
-
-## RUN npm install -g png-js crypto-js download got http-server request tough-cookie tunnel ws pm2
+## RUN npm install -g png-js crypto-js download got http-server request tough-cookie tunnel ws
 
 
 ENTRYPOINT ["/shell/docker-entrypoint.sh"]
