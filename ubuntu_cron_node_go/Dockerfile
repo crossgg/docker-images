@@ -10,7 +10,6 @@ RUN chmod 777 /shell/docker-entrypoint.sh
 
 RUN apt-get update && apt-get install cron -y && apt-get install curl -y && apt-get install python3 -y && apt-get install python3-pip -y \
     && apt-get install vim git wget gcc -y
-RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 ## 安装go环境
 RUN cd /usr/local \
