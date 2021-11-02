@@ -1,7 +1,7 @@
 FROM golang:alpine
 ENV ENABLE_GOPROXY=true
-    ENABLE_GITHUBPROXY=true
-	ENABLE_APKPROXY=true
+ENV ENABLE_GITHUBPROXY=true
+ENV ENABLE_APKPROXY=true
 
 COPY SillyGirlDockerDeploy/docker-entrypoint.sh /bin/
 
