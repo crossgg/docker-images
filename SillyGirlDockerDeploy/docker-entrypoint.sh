@@ -13,7 +13,12 @@ else
   sh $CONF_DIR/userScript.sh
 fi
 
-echo "启动..."
- ./sillyGirl
+if [ ! -f $CODE_DIR/sillyGirl ]; then
+  echo "sillyGirl 不存在，不执行"
+else
+  echo "启动..."
+  ./sillyGirl
+fi
+ 
 
 
