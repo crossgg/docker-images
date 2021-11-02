@@ -4,7 +4,7 @@ RUN mkdir -p /shell
 
 WORKDIR /app
 COPY ubuntu_cron_node_go/extra.sample.sh /app/extra.sh
-COPY ubuntu_cron_node_go/docker-entrypoint /shell/docker-entrypoint.sh
+COPY ubuntu_cron_node_go/docker-entrypoint.sh /shell/docker-entrypoint.sh
 RUN chmod 777 /app/extra.sh
 RUN chmod 777 /shell/docker-entrypoint.sh
 
