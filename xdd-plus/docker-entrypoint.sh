@@ -1,18 +1,22 @@
-#!/bin/bash
+#!/bin/sh
 
-echo -e "======================7. 启动JDC========================\n"
-if [[ $ENABLE_WEB_XDD == true ]]; then
-        cd /xdd
-        pm2 start XDD
-        echo -e "XDD面板启动成功...\n"
-elif [[ $ENABLE_WEB_XDD == false ]]; then
-        echo -e "\n默认首次不启动 XDD 面板，请编辑好配置文件后，修改环境变量为true启动面板"
-        echo -e "\n配置文件为 `\xdd\conf\config.yaml`..."
+WORKDIR=/xdd
+CONF_DIR=/xdd/conf
+
+
+if [ ! -f $CONF_DIR/userScript.sh ]; then
+  echo "userScript.sh 不存在，不执行用户自定义脚本"
+else
+  echo "userScript.sh 存在，执行用户自定义脚本"
+  sh $CONF_DIR/userScript.sh
 fi
 
-echo -e "############################################################\n"
-echo -e "容器启动成功..."
+if [ ! -f /xdd/xdd ]; then
+  echo "sillyGirl 不存在，不执行"
+else
+  echo "启动..."
+  ./xdd
+fi
+ 
 
-crond -f >/dev/null
 
-exec "$@"
