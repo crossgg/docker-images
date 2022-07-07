@@ -8,7 +8,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 ENV PORT 3000
 EXPOSE $PORT/tcp
 
-ADD ./app/src
+ADD . /app/src
 WORKDIR /app/src
 
 RUN apk add update && \
