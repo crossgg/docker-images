@@ -8,15 +8,14 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 ENV PORT 3000
 EXPOSE $PORT/tcp
 
-ADD . /app/src
 WORKDIR /app/src
 
-RUN apk add --update && \
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
+    apk add --update && \
     apk add --no-cache vim git && \
     git clone https://github.com/lkeme/bilibili-pcheartbeat.git /app/src && \
     rm -rf /var/cache/apk/* /tmp/* /var/tmp/* && \
     cd /app/src && \
-    npm install
-# COPY /app/src/* ./
+    npm install 
 
 CMD ["node", "/app/src/app.js"]
