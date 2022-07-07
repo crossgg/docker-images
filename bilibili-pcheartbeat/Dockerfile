@@ -11,12 +11,12 @@ EXPOSE $PORT/tcp
 ADD . /app/src
 WORKDIR /app/src
 
-RUN apk add update && \
-    apk add vim git && \
-	git clone ${BILI-PCHEARTBEAT_URL} /app/src && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
+RUN apk add --update && \
+    apk add --no-cache vim git && \
+    git clone https://github.com/lkeme/bilibili-pcheartbeat.git /app/src && \
+    rm -rf /var/cache/apk/* /tmp/* /var/tmp/* && \
+    cd /app/src && \
+    npm install
 # COPY /app/src/* ./
-RUN npm install
 
 CMD ["node", "/app/src/app.js"]
