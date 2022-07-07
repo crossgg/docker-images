@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:alpine
 
 ENV TZ=Asia/Shanghai
 ENV BILI-PCHEARTBEAT_VERSION=2022.7.7
@@ -13,7 +13,7 @@ RUN apt-get update && \
 	git clone ${BILI-PCHEARTBEAT_URL} /app/src && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY /app/src/* ./
+# COPY /app/src/* ./
 RUN npm install
 
 CMD ["node", "app.js"]
