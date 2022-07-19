@@ -12,8 +12,8 @@ ENV TZ Asia/Shanghai
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster
 
-WORKDIR /app
-COPY --from=base /app .
+#WORKDIR /app
+#COPY Microsoft365_E5_Renew_X/. /app .
 #预执行命令，容器创建完成后执行的命令，使得程序能够执行
 
 RUN dotnet dev-certs https --clean

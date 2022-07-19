@@ -1,7 +1,7 @@
 ## fork from https://github.com/hongyonghan/Docker_Microsoft365_E5_Renew_X
 只是更新了作者0516更新的文件 https://sundayrx.lanzoui.com/aW09Lsss75g
 ```
-docker run -d -p 1066:1066 -v /path/Deploy:/app/Deploy  crosscc/ms365-e5-renew-x:latest
+docker run -d -p 1067:1066  crosscc/ms365-e5-renew-x:latest
 
 ```
 
