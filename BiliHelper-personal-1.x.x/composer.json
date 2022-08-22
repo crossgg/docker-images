@@ -1,0 +1,49 @@
+{
+  "name": "lkeme/bilihelper",
+  "description": "B 站自动领瓜子、直播助手、直播挂机脚本、主站助手 - PHP 版（Personal）",
+  "type": "project",
+  "require": {
+    "php": ">=8.0",
+    "ext-curl": "*",
+    "ext-openssl": "*",
+    "ext-sockets": "*",
+    "ext-json": "*",
+    "ext-zlib": "*",
+    "ext-mbstring": "*",
+    "monolog/monolog": "^1.26.0",
+    "bramus/monolog-colored-line-formatter": "^2.0.3",
+    "clue/socket-raw": "^1.5.0",
+    "amphp/amp": "^2.5.2",
+    "guzzlehttp/guzzle": "^7.4.0",
+    "overtrue/pinyin": "~4.0",
+    "adhocore/cli": "^0.9.0",
+    "lkeme/inifile": "^3.4",
+    "symfony/yaml": "^6.0",
+    "sven/file-config": "^3.1",
+    "fire015/flintstone": "^2.3",
+    "consolidation/config": "^2.0",
+    "lkeme/data": "dev-master",
+    "phppkg/config": "^1.1"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Lkeme",
+      "email": "Useri@live.cn",
+      "homepage": "https://mudew.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "BiliHelper\\Core\\": "src/core",
+      "BiliHelper\\Plugin\\": "src/plugin",
+      "BiliHelper\\Util\\": "src/util",
+      "BiliHelper\\Tool\\": "src/tool",
+      "BiliHelper\\Script\\": "src/script",
+      "BiliHelper\\Exceptions\\": "src/exception"
+    },
+    "files": [
+      "src/core/Helpers.php"
+    ]
+  }
+}
