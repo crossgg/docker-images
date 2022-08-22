@@ -5,9 +5,6 @@ LABEL AUTHOR = "Lkeme <Useri@live.cn>"
 
 ENV USER_NAME='' \
     USER_PASSWORD='' \
-    REPO_URL='https://github.com/' \
-    CUSTOM_CLONE_URL='https://speed.example.com/example/example.git' \
-    MIRRORS="0" \
     CONIFG_PATH='/app/conf/user.ini' \
     Green="\\033[32m" \
     Red="\\033[31m" \
@@ -33,8 +30,8 @@ RUN docker-php-ext-install sockets
 #    && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
 #    && echo "Asia/Shanghai" > /etc/timezone \
 
+COPY BiliHelper-personal-1.x.x/. /app/
 RUN apk add --no-cache git && \
-    git clone ${REPO_URL}/lkeme/BiliHelper-personal.git --depth=1 /app && \
     cp -f /app/docker/entrypoint.sh /usr/local/bin/entrypoint.sh && \
     chmod 777 /usr/local/bin/entrypoint.sh && \
     php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.php');" && \
