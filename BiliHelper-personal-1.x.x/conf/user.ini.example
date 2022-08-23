@@ -247,7 +247,7 @@ server_addr = "tcp://broadcastlv.chat.bilibili.com:2243/sub"
 
 ; 加密心跳服务器(开源)|如失效自行搭建
 [heartbeat_enc]
-server = "http://heartbeat-1.mudew.com:3000/enc"
+server = "http://1.14.31.209:3000/enc"
 
 #######################
 #       房间设置       #
