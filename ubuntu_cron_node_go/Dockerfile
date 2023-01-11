@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:jammy
 RUN mkdir -p /app
 RUN mkdir -p /shell
 
