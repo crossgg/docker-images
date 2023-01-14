@@ -1,10 +1,7 @@
 FROM ubuntu:jammy
 
-ARG DEBIAN_FRONTEND=noninteractive
-ARG TZ="Asia/Shanghai"
-
-RUN  sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list && \
-     sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
+ENV TZ=Asia/Shanghai
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN  apt-get -qq update && \
      apt-get -qq install -y --no-install-recommends tzdata ca-certificates cron curl python3 python3-pip nodejs vim git wget gcc sudo && \
@@ -13,7 +10,12 @@ RUN  apt-get -qq update && \
 	 echo ${TZ} > /etc/timezone && \
 	 dpkg-reconfigure --frontend noninteractive tzdata
 	 
-RUN  mkdir /app/ 
+RUN  mkdir /app/ && \
+	 mkdir /shell/
+
+#COPY ./docker-entrypoint.sh /shell/docker-entrypoint.sh
+
+#RUN  chmod 777 /shell/docker-entrypoint.sh
 
 COPY --from=nevinee/s6-overlay:bin-is-softlink / /
 
@@ -26,6 +28,10 @@ VOLUME /app
 
 RUN npm config set registry https://registry.npmmirror.com/
 RUN npm install -g pm2
+
+## 替换清华源
+RUN  sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list && \
+     sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 
 ## 安装go环境
 RUN apt-get -qq install golang-go -y
@@ -48,4 +54,3 @@ WORKDIR /app
 RUN echo "service cron start" > ~/.bashrc
 
 ENTRYPOINT ["/init"]
-
