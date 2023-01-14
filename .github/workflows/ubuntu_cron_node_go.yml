@@ -30,4 +30,4 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/ubuntu_cron_node_go:latest
+            ${{ secrets.DOCKER_USERNAME }}/ubuntu_s6_cron:latest

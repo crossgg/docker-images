@@ -1,37 +1,51 @@
-FROM ubuntu:18.04
-RUN mkdir -p /app
-RUN mkdir -p /shell
+FROM ubuntu:jammy
 
-WORKDIR /app
-COPY ubuntu_cron_node_go/extra.sample.sh /app/extra.sh
-COPY ubuntu_cron_node_go/docker-entrypoint.sh /shell/docker-entrypoint.sh
-RUN chmod 777 /app/extra.sh
-RUN chmod 777 /shell/docker-entrypoint.sh
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TZ="Asia/Shanghai"
 
-RUN apt-get update && apt-get install cron -y && apt-get install curl -y && apt-get install python3 -y && apt-get install python3-pip -y \
-    && apt-get install vim git wget gcc -y
+RUN  sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list && \
+     sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
+
+RUN  apt-get -qq update && \
+     apt-get -qq install -y --no-install-recommends tzdata ca-certificates cron curl python3 python3-pip nodejs vim git wget gcc sudo && \
+	 apt-get -qq install -y --no-install-recommends npm && \
+	 ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime && \
+	 echo ${TZ} > /etc/timezone && \
+	 dpkg-reconfigure --frontend noninteractive tzdata
+	 
+RUN  mkdir /app/ 
+
+COPY --from=nevinee/s6-overlay:bin-is-softlink / /
+
+
+EXPOSE 8080
+
+VOLUME /app
+
+## 安装pm2
+
+RUN npm config set registry https://registry.npmmirror.com/
+RUN npm install -g pm2
 
 ## 安装go环境
+RUN apt-get -qq install golang-go -y
 RUN cd /usr/local \
-    && wget https://golang.google.cn/dl/go1.17.1.linux-amd64.tar.gz \
+    && wget https://golang.google.cn/dl/go1.18.linux-amd64.tar.gz \
 	&& rm -rf /usr/local/go \
-	&& tar -C /usr/local -xzf go1.17.1.linux-amd64.tar.gz \
-	&& rm go1.17.1.linux-amd64.tar.gz \
+	&& tar -C /usr/local -xzf go1.18.linux-amd64.tar.gz \
+	&& rm go1.18.linux-amd64.tar.gz \
 	&& echo "export GO111MODULE=on" > \etc\profile  \
 	&& echo "export GOPROXY=https://goproxy.cn" > /etc/profile \
 	&& echo "export GOROOT=/usr/local/go" > /etc/profile \
 	&& echo "export GOPATH=/usr/local/go/path" > /etc/profile \
 	&& echo "export PATH=$PATH:$GOROOT/bin:$GOPATH/bin" > /etc/profile \
-	&& source /etc/profile \
-	&& echo "source /etc/profile" > ~/.bashrc 
+	&& echo "source /etc/profile" > ~/.bashrc
 
-## 安装nodejs
-RUN curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash - \
-	&& apt-get install -y nodejs
-RUN npm config set registry http://registry.npm.taobao.org/
-RUN npm install -g pm2
+RUN rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-## RUN npm install -g png-js crypto-js download got http-server request tough-cookie tunnel ws
+## 开机启动cron
+RUN echo "service cron start" > ~/.bashrc
 
+ENTRYPOINT ["/init"]
 
-ENTRYPOINT ["/shell/docker-entrypoint.sh"]
