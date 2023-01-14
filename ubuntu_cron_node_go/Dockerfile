@@ -29,9 +29,6 @@ VOLUME /app
 RUN npm config set registry https://registry.npmmirror.com/
 RUN npm install -g pm2
 
-## 替换清华源
-RUN  sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list && \
-     sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 
 ## 安装go环境
 RUN apt-get -qq install golang-go -y
@@ -50,6 +47,10 @@ RUN cd /usr/local \
 RUN rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
+## 替换清华源
+RUN  sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list && \
+     sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
+	 
 ## 开机启动cron
 RUN echo "service cron start" > ~/.bashrc
 
