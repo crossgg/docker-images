@@ -7,7 +7,7 @@ FROM jlesage/baseimage-gui:alpine-3.12-glibc
 ARG TMM_VERSION=4.0.6
 
 # Define software download URLs.
-ARG TMM_URL=https://raw.githubusercontent.com/q123458384/docker-images/master/tinymediamanager4/tmm_4.0.6_crack_linux.tar.gz
+ARG TMM_URL=https://raw.githubusercontent.com/crossgg/docker-images/master/tinymediamanager4/tmm_4.0.6_crack_linux.tar.gz
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/jre/bin
 # Define working directory.
 WORKDIR /tmp
