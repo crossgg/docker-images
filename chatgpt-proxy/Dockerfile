@@ -1,7 +1,6 @@
 FROM golang as builder
 WORKDIR /app
-RUN apk add --no-cache git \
-  && git clone --quiet https://github.com/flyingpot/chatgpt-proxy.git
+RUN git clone --quiet https://github.com/flyingpot/chatgpt-proxy.git /app
 #COPY chatgpt-proxy/go.mod chatgpt-proxy/go.sum ./
 RUN go mod download
 #COPY chatgpt-proxy/. .
