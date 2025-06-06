@@ -5,7 +5,8 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # 将当前目录内容复制到容器的 /app 中
-RUN git clone --quiet https://github.com/sml2h3/ddddocr-fastapi.git /app 
+## RUN git clone --quiet https://github.com/sml2h3/ddddocr-fastapi.git /app 
+COPY . /app
 
 # 安装项目依赖
 RUN pip install --no-cache-dir -r requirements.txt
