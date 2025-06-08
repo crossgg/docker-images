@@ -3,6 +3,42 @@
 ```shell
 docker run -d -p 9898:8000 --name ddddocr-api --restart=unless-stopped crosscc/ddddocr-api 
 ```
+直接解析base64格式图纸，而不要上传图片的，nodejs脚本：
+```nodejs
+const axios = require('axios');
+const FormData = require('form-data'); 
+const fs = require('fs');
+
+const url = 'http://10.0.0.10:9898/ocr';
+
+const base64Image = 'xxxx'; 
+
+const form = new FormData();
+
+form.append('image', base64Image);
+// multipart/form-data 的值通常是字符串，将布尔值转换为字符串更安全
+form.append('probability', 'false'); 
+form.append('png_fix', 'false');
+
+
+axios.post(url, form, {
+  headers: {
+    ...form.getHeaders() // 让 form-data 库为你生成正确的 Content-Type 和 boundary
+  }
+})
+  .then(response => {
+    console.log(response.data);
+  })
+  .catch(error => {
+    // 打印更详细的错误信息，有助于调试
+    if (error.response) {
+      console.error('Error Response:', error.response.data);
+    } else {
+      console.error('Error:', error.message);
+    }
+  });
+```
+
 
 -----------------------
 ## 转载：https://github.com/sml2h3/ddddocr-fastapi/
