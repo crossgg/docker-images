@@ -1,4 +1,4 @@
-name: 构建ddddocr_api_server镜像
+name: 构建ddddocr-docker镜像
 on:
   #防止fork乱用action设置只能手动触发构建
   workflow_dispatch:
@@ -26,8 +26,8 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./ddddocr_api_server/Dockerfile
-          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
+          file: ./ddddocr-fastapi/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/ddddocr_api_server:latest
+            ${{ secrets.DOCKER_USERNAME }}/ddddocr:latest
