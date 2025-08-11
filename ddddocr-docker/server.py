@@ -270,9 +270,20 @@ def select():
 # 基本运行状态路由，返回一个表示服务器正常运行的消息
 @app.route('/')
 def hello_world():
-    return 'API运行成功！'
+    domain = request.host
+    return f"""API运行成功！<br>
+<br> ## 接口 <br>
+1. 滑块验证: <br> http://{domain}/capcode <br>
+2. ocr识别: <br> http://{domain}/classification <br>
+3. 位置识别: <br> http://{domain}/detection <br>
+4. 数字计算: <br> http://{domain}/calculate <br>
+5. 滑块对比: <br> http://{domain}/slideComparison <br>
+6. 图片分割: <br> http://{domain}/crop <br>
+7. 图片点选: <br> http://{domain}/select"""
 
 
 # 启动Flask应用
 if __name__ == '__main__':
     app.run(host='::', threaded=True, debug=True, port=7777)
+
+
