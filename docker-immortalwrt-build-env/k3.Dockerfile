@@ -32,7 +32,7 @@ RUN git clone https://github.com/coolsnowwolf/lede && \
     cd lede && \
     ./scripts/feeds update -a && \
     ./scripts/feeds install -a && \
-    curl https://raw.githubusercontent.com/xiangfeidexiaohuo/AE86Wrt/refs/heads/main/configs/ARM/other/k3.config –o .config && \
+    wget -O .config https://raw.githubusercontent.com/xiangfeidexiaohuo/AE86Wrt/refs/heads/main/configs/ARM/other/k3.config && \
     make defconfig
     make download -j8 && \
     make -j1 V=s
