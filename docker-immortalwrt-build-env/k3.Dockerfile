@@ -15,7 +15,8 @@ RUN apt-get update &&\
         qemu-utils re2c rsync scons squashfs-tools subversion sudo swig texinfo time uglifyjs unzip upx-ucl vim wget xmlto xxd xz-utils zlib1g-dev zstd && \
     apt-get clean && \
     useradd -m user && \
-    echo 'user ALL=NOPASSWD: ALL' > /etc/sudoers.d/user
+    echo 'user ALL=NOPASSWD: ALL' > /etc/sudoers.d/user  && \
+    export FORCE_UNSAFE_CONFIGURE=1
 
 # set system wide dummy git config
 RUN git config --system user.name "user" && git config --system user.email "user@example.com"
