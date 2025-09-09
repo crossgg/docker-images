@@ -36,5 +36,5 @@ RUN git clone https://github.com/coolsnowwolf/lede && \
     make defconfig
     make download -j8 && \
     make -j1 V=s
-    
-    
+
+ENTRYPOINT ["/init"]    
