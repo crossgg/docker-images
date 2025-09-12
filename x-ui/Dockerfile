@@ -1,8 +1,8 @@
-FROM docker.1ms.run/golang:latest AS builder
+FROM golang:latest AS builder
 COPY x-ui/get_xui_alpha_zh.sh get_xui.sh
 RUN bash get_xui.sh
 
-FROM docker.1ms.run/debian:12-slim
+FROM debian:12-slim
 COPY --from=builder /go/x-ui/x-ui /usr/local/bin/x-ui
 
 ENV DEBIAN_FRONTEND=noninteractive, TZ=Asia/Shanghai

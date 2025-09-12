@@ -27,7 +27,7 @@ jobs:
         with:
           context: .
           file: ./x-ui/Dockerfile
-          platforms: linux/amd64linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/x-ui:latest
