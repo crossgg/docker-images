@@ -22,7 +22,13 @@ wget https://raw.githubusercontent.com/crossgg/docker-images/refs/heads/master/x
 docker compose up -d
 ```
 
+启动后
 
+通过 `ip:54321`打开面板
+
+默认账号密码：admin
+
+端口等参数修改可以通过容器内命令 `x-ui` 修改
 
 
 
