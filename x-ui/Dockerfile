@@ -11,8 +11,8 @@ RUN apt-get update \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ARG TARGETARCH
-COPY --from=docker.1ms.run/teddysun/xray /usr/bin/xray /usr/local/bin/bin/xray-linux-${TARGETARCH}
-COPY --from=docker.1ms.run/teddysun/xray /usr/share/xray/ /usr/local/bin/bin/
+COPY --from=teddysun/xray /usr/bin/xray /usr/local/bin/bin/xray-linux-${TARGETARCH}
+COPY --from=teddysun/xray /usr/share/xray/ /usr/local/bin/bin/
 
 VOLUME [ "/etc/x-ui" ]
 WORKDIR /usr/local/bin
