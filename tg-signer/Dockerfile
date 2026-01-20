@@ -21,9 +21,10 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install /tmp/*.whl && \
+    pip install -U "tg-signer[tgcrypto]"
 
 RUN pip install -U tg-signer && \
-    pip install tg-signer[gui]
+    pip install "tg-signer[gui]"
 
 ENV PORT 8080
 EXPOSE $PORT/tcp
