@@ -22,7 +22,7 @@ RUN apt-get update && \
 
 RUN pip install /tmp/*.whl && \
 
-RUN pip pip install -U tg-signer && \
+RUN pip install -U tg-signer && \
     pip install "tg-signer[gui]"
 
 ENV PORT 8080
