@@ -1,69 +1,37 @@
-## 先决条件
-
-工作目录下添加`start.sh`:
+## docker 安装：
 
 ```sh
-pip install -U tg-signer
-
-# 首次配置时使用，后续注释掉
-sleep infinity
-
-# 配置完成后取消注释
-# tg-signer run mytasks
+docker run -d --name tg-signer-web --restart=unless-stopped -p xxxx:8080 -v $PWD/tg-signer:/opt/tg-signer docker.1ms.run/crosscc/tg-signer-web
 ```
 
-## 使用Dockerfile
+`xxxx`改为你需要映射的端口
 
-* ### 构建镜像：
 
-    ```sh
-    docker build -t tg-signer:latest -f CN.Dockerfile .
-    ```
 
-* ### 运行
+**或者采用docker-compose安装**
 
-    ```sh
-    docker run -d --name tg-signer --volume $PWD:/opt/tg-signer --env TG_PROXY=socks5://172.17.0.1:7890 tg-signer:latest bash start.sh
-    ```
+创建docker-compose.yaml
 
-* ### 指定时区
-
-    构建镜像时可以通过 `TZ` 参数指定时区，例如：
-
-    ```sh
-    docker build --build-arg TZ=Asia/Shanghai -t tg-signer:latest -f CN.Dockerfile .
-    ```
-
-    运行容器时再次设置环境变量确保 `TZ` 传递进去（默认值 `Asia/Shanghai`）：
-
-    ```sh
-    docker run -d --name tg-signer \
-      --volume $PWD:/opt/tg-signer \
-      --env TG_PROXY=socks5://172.17.0.1:7890 \
-      --env TZ=Asia/Shanghai \
-      tg-signer:latest bash start.sh
-    ```
-
-## 或使用Docker Compose
-
-```sh
-docker-compose up -d
+```yaml
+services:
+  tg-signer-web:
+    container_name: tg-signer-web
+    image: docker.1ms.run/crosscc/tg-signer-web
+    restart: unless-stopped
+    ports:
+      - xxxx:8080
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./tg-signer:/opt/tg-signer 
 ```
 
-### 可选：调整时区
+运行：docker-compose up -d
 
-通过 `TZ` 环境变量可以在启动和构建期间一致地设置时区（默认 `Asia/Shanghai`）。示例：
 
-```sh
-TZ=Asia/Shanghai docker compose up -d
-```
 
-如果需要重新构建镜像以更新时区（例如从 `docker compose build`），也可以加上同样的 `TZ` 环境变量：
-
-```sh
-TZ=Asia/Shanghai docker compose build
-```
+后打开 `ip:xxxx` 就能打开webui
 
 ## 配置任务
 
-接下来即可执行 `docker exec -it tg-signer bash` 进入容器进行登录和配置任务操作，见 [README.md](/README.md)。
+接下来即可执行 `docker exec -it tg-signer bash` 进入容器进行登录和配置任务操作，见 https://github.com/amchii/tg-signer
