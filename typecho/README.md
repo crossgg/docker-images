@@ -6,10 +6,10 @@ use [s6](https://skarnet.org/software/s6/why.html) as supervision instead of run
 
 update: typecho code has been updated to [v1.3.0](https://github.com/typecho/typecho/releases/tag/v1.3.0)
 
-latest image: docker.io/80x86/typecho:v1.3.0-amd64
+latest image: docker.io/crosscc/typecho:latest
 
 ```
-docker.io/80x86/typecho:v1.3.0-amd64
+docker.io/crosscc/typecho:latest
 ```
 
 typecho is a PHP based lightweight blog system
@@ -35,13 +35,15 @@ docker run -d \
   -e PHP_TZ=Asia/Shanghai \
   -e PHP_MAX_EXECUTION_TIME=600 \
   -p 90:80 \
-  80x86/typecho:latest
+  crosscc/typecho:latest
 ```
 
 ## Build
 
 1. Run `init.sh` to download typecho v1.3.0 release
 2. Run `docker build -f ./docker/Dockerfile -t typecho:v1.3.0 .`
+
+请重新构建镜像并启动。如果你的旧数据还需要数据库升级，启动后请访问 http://你的域名/install/upgrade.php 完成数据库结构升级。
 
 ## About
 
