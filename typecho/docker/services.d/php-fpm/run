@@ -1,0 +1,11 @@
+#! /bin/sh
+
+set -eu
+exec 2>&1
+
+DAEMON=/usr/sbin/php-fpm83
+
+test -x ${DAEMON} || (echo 'php-fpm has not installed.' && exit 1)
+${DAEMON} --test || (echo 'php-fpm config has error.' && exit 1)
+
+exec ${DAEMON} -F -c /etc/php83/php.ini -y /etc/php83/php-fpm.d/www.conf

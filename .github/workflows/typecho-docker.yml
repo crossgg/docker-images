@@ -1,4 +1,4 @@
-name: typecho
+name: 构建typecho-docker镜像
 on:
   #防止fork乱用action设置只能手动触发构建
   workflow_dispatch:
@@ -9,6 +9,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+
+      - name: 下载typecho v1.3.0源码
+        run: |
+          cd typecho
+          bash init.sh
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -25,9 +30,10 @@ jobs:
       - name: 构建并推送到Dockerhub镜像仓库
         uses: docker/build-push-action@v2
         with:
-          context: .
-          file: ./typecho/Dockerfile
-          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
+          context: ./typecho
+          file: ./typecho/docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/typecho-blog:latest
+            ${{ secrets.DOCKER_USERNAME }}/typecho:latest
+            ${{ secrets.DOCKER_USERNAME }}/typecho:v1.3.0

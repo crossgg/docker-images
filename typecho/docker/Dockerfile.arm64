@@ -1,0 +1,111 @@
+#thanks https://github.com/dockage/alpine-runit/blob/master/Dockerfile
+#thanks https://github.com/faisyl/alpine-runit
+#thanks https://github.com/petronetto/php-nginx-alpine
+#man https://www.cyberciti.biz/faq/10-alpine-linux-apk-command-examples/
+
+FROM alpine:3.21
+
+LABEL maintainer='HuangYeWuDeng <***@ttys0.in>' \
+        org.label-schema.name="typecho" \
+        org.label-schema.vendor="HuangYeWuDeng" \
+        org.label-schema.description="Docker image uses s6 as a process supervision run typecho under nginx and php-fpm on Alpine Linux" \
+        org.label-schema.vcs-url="https://github.com/ttys3/typecho-docker" \
+        org.label-schema.version="2.0" \
+        org.label-schema.license="MIT"
+
+# Environment variables
+ENV PUID='1000' \
+        PGID='1000' \
+        HTTPD_USER='www' \
+        PHP_TZ=Asia/Shanghai \
+        PHP_MAX_EXECUTION_TIME=600 \
+        PHP_FPM_MAX_CHILDREN=64 \
+        APP_DEBUG=false
+
+# Install s6-overlay
+ARG S6_OVERLAY_VERSION=3.2.0.2
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-aarch64.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
+        && tar -C / -Jxpf /tmp/s6-overlay-aarch64.tar.xz \
+        && rm -f /tmp/s6-overlay-*.tar.xz
+
+# Install packages
+RUN apk --update add --no-cache \
+        tzdata \
+        nginx \
+        curl \
+        freetype \
+        libpng \
+        libjpeg-turbo \
+        php83 \
+        php83-dom \
+        php83-fpm \
+        php83-mbstring \
+        php83-opcache \
+        php83-pdo \
+        php83-pdo_mysql \
+        php83-pdo_sqlite \
+        php83-exif \
+        php83-tokenizer \
+        php83-fileinfo \
+        php83-xml \
+        php83-phar \
+        php83-openssl \
+        php83-curl \
+        php83-ctype \
+        php83-session \
+        php83-gd \
+        php83-zip \
+        php83-zlib \
+        php83-iconv \
+        && rm -rf /var/cache/apk/* \
+        && rm -rf /usr/share/gtk-doc \
+        && ln -sf /usr/bin/php83 /usr/bin/php
+
+
+# Configuring timezones, see https://wiki.alpinelinux.org/wiki/Setting_the_timezone
+RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+        && echo "Asia/Shanghai" >  /etc/timezone \
+        && apk del --no-cache tzdata \
+        && rm -rf /var/cache/apk/*
+
+# Create application folder
+# RUN mkdir -p /app
+
+# create www user for php-fpm
+RUN addgroup -g 1000 -S $HTTPD_USER \
+        && adduser -u 1000 -D -S -G $HTTPD_USER -h /app -g $HTTPD_USER $HTTPD_USER \
+        && chown -R nginx:nginx /var/lib/nginx
+
+# copy app build result to image
+COPY --chown=1000:1000 typecho /app/
+
+# for debug COPY instruction
+# RUN ls -lhp /app/
+
+# Configure Nginx and PHP-FPM
+COPY docker/config/ /etc/
+
+# Configure s6 service
+COPY docker/services.d /etc/services.d/
+RUN chmod +x /etc/services.d/*/run
+
+# inject before run
+# ref to https://github.com/dockage/runit-scripts/tree/master/alpine/etc/sv
+COPY docker/app-init.sh docker/inject.sh /
+RUN chmod +x /app-init.sh \
+        && chmod +x /inject.sh
+
+# Setting the workdir
+WORKDIR /app
+
+EXPOSE 80
+VOLUME /data
+
+HEALTHCHECK --interval=6s --timeout=3s \
+        CMD curl -INfs http://localhost/ > /dev/null || exit 1
+
+CMD ["/app-init.sh"]
+
+# vim: set ft=dockerfile ts=4 sw=4 et:
