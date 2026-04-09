@@ -445,8 +445,14 @@ func (r *Runner) probeMonitorViaSOCKS(ctx context.Context, parsedURL *url.URL) e
 		return fmt.Errorf("SOCKS5 代理地址为空")
 	}
 
+	// 构建带认证的SOCKS5代理URL
+	proxyURL := &url.URL{Scheme: "socks5", Host: proxyAddr}
+	if r.socks.username != "" && r.socks.password != "" {
+		proxyURL.User = url.UserPassword(r.socks.username, r.socks.password)
+	}
+
 	transport := &http.Transport{
-		Proxy:               http.ProxyURL(&url.URL{Scheme: "socks5", Host: proxyAddr}),
+		Proxy:               http.ProxyURL(proxyURL),
 		DisableKeepAlives:   true,
 		ForceAttemptHTTP2:   false,
 		TLSHandshakeTimeout: r.autoConfig.MonitorTimeout,
