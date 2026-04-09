@@ -132,6 +132,7 @@ func (r *Runner) Status() Status {
 		Current:         current,
 		SocksListenAddr: r.socks.ListenAddr(),
 		SocksUsername:   r.socks.username,
+		SocksPassword:   r.socks.password,
 		LastError:       r.lastError,
 		ConnectedAt:     r.connectedAt,
 		UpdatedAt:       r.updatedAt,

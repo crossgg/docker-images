@@ -24,6 +24,7 @@ type Status struct {
 	Current         *ConnectionInfo `json:"current,omitempty"`
 	SocksListenAddr string          `json:"socksListenAddr"`
 	SocksUsername   string          `json:"socksUsername,omitempty"`
+	SocksPassword   string          `json:"socksPassword,omitempty"`
 	LastError       string          `json:"lastError,omitempty"`
 	ConnectedAt     time.Time       `json:"connectedAt,omitempty"`
 	UpdatedAt       time.Time       `json:"updatedAt"`

@@ -669,8 +669,7 @@ func (a *App) buildPageData(notice, flashError, query, selectedCountry string) P
 	vpnsocksPassword := ""
 	if runnerErr == nil {
 		vpnsocksUsername = runnerStatus.SocksUsername
-		// 密码暂时设为空，实际应用中应该从配置中获取
-		vpnsocksPassword = ""
+		vpnsocksPassword = runnerStatus.SocksPassword
 	}
 
 	a.mu.RLock()
