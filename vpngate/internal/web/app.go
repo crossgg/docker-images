@@ -993,6 +993,10 @@ func formatVPNStatus(status runner.Status, runnerErr error) (string, string, str
 	if status.Current != nil {
 		vpnNode = status.Current.HostName
 		vpnIP = status.Current.IP
+		// 增加国家显示
+		if status.Current.CountryShort != "" {
+			vpnNode += " (" + status.Current.CountryShort + ")"
+		}
 	}
 
 	connectedSince := ""
