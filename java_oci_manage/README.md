@@ -16,7 +16,7 @@ docker run -itd --name Rbot --restart unless-stopped \
   -v /root/config/client_config:/app/client_config \
   -v /root/config/key.pem:/app/key.pem \
   -p 9527:9527 \
-  crossgg/java_oci_manage
+  crosscc/java_oci_manage
 ```
 
 ### 进入 docker 容器
