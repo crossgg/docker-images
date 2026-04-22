@@ -1,0 +1,6 @@
+# 强制指定换行符为 LF
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+*.conf text eol=lf
