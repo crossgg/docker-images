@@ -7,14 +7,18 @@
 
 ## docker 部署
 ### 准备配置文件
-- 参考官方项目,准备 oracle api key 私钥文件`key.pem`.
-- 参考官方项目,配置 client_config 文件,注意 key 路径为`key_file=/app/key.pem`.
+
+1、给 tgbot（@radiance_helper_bot）发送`/raninfo`  生成随机账号密码
+
+2、首次运行的时候会在你映射出来的路径生成配置默认配置文件`client_config` 
+
+主要是修改里面的账号密码,修改好后重启容器就可以运行了。
+其他配置可以在 https://yourip:9527 可视化面板修改
 
 ### 启动 docker 容器
 ```bash
 docker run -itd --name Rbot --restart unless-stopped \
-  -v /root/config/client_config:/app/client_config \
-  -v /root/config/key.pem:/app/key.pem \
+  -v /yourpatch/app:/app \
   -p 9527:9527 \
   crosscc/java_oci_manage
 ```
