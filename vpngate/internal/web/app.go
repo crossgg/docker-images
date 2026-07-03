@@ -46,6 +46,7 @@ type RunnerControl interface {
 	Connect(ctx context.Context, server vpngate.Server) (runner.Status, error)
 	Disconnect(ctx context.Context) (runner.Status, error)
 	TestServer(ctx context.Context, server vpngate.Server) (vpngate.OpenVPNTestResult, error)
+	UpdateAutoSelectionConfig(ctx context.Context, config runner.AutoSelectionConfig) (runner.AutoSelectionConfig, error)
 }
 
 type PageData struct {
@@ -82,11 +83,31 @@ type PageData struct {
 	VPNCurrentIP        string
 	VPNConnectedSince   string
 	VPNCanDisconnect    bool
+	AutoRegionSlots     []AutoRegionSlot
+	AutoSortOptions     []AutoSortOption
 }
 
 type CountryOption struct {
 	Value string
 	Label string
+}
+
+type AutoRegionSlot struct {
+	Name    string
+	Label   string
+	Options []AutoRegionOption
+}
+
+type AutoRegionOption struct {
+	Value    string
+	Label    string
+	Selected bool
+}
+
+type AutoSortOption struct {
+	Value    string
+	Label    string
+	Selected bool
 }
 
 type ServerRow struct {
@@ -178,6 +199,7 @@ func (a *App) Routes() http.Handler {
 	mux.HandleFunc("/vpn/connect/recommended", a.handleVPNConnectRecommended)
 	mux.HandleFunc("/vpn/connect", a.handleVPNConnect)
 	mux.HandleFunc("/vpn/disconnect", a.handleVPNDisconnect)
+	mux.HandleFunc("/vpn/auto-config", a.handleVPNAutoConfig)
 	mux.HandleFunc("/vpn/status", a.handleVPNStatus)
 	mux.HandleFunc("/health", a.handleHealth)
 
@@ -189,13 +211,13 @@ func (a *App) basicAuthMiddleware(next http.Handler) http.Handler {
 		// 从环境变量获取用户名和密码
 		username := os.Getenv("WEB_USERNAME")
 		password := os.Getenv("WEB_PASSWORD")
-		
+
 		// 如果没有设置用户名和密码，则跳过认证
 		if username == "" || password == "" {
 			next.ServeHTTP(w, r)
 			return
 		}
-		
+
 		// 基本认证逻辑
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
@@ -203,7 +225,7 @@ func (a *App) basicAuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "未授权访问", http.StatusUnauthorized)
 			return
 		}
-		
+
 		// 解析认证头
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || parts[0] != "Basic" {
@@ -211,7 +233,7 @@ func (a *App) basicAuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "未授权访问", http.StatusUnauthorized)
 			return
 		}
-		
+
 		// 解码Base64
 		decoded, err := base64.StdEncoding.DecodeString(parts[1])
 		if err != nil {
@@ -219,7 +241,7 @@ func (a *App) basicAuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "未授权访问", http.StatusUnauthorized)
 			return
 		}
-		
+
 		// 解析用户名和密码
 		credentials := strings.SplitN(string(decoded), ":", 2)
 		if len(credentials) != 2 || credentials[0] != username || credentials[1] != password {
@@ -227,7 +249,7 @@ func (a *App) basicAuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "未授权访问", http.StatusUnauthorized)
 			return
 		}
-		
+
 		// 认证成功，继续处理请求
 		next.ServeHTTP(w, r)
 	})
@@ -628,6 +650,57 @@ func (a *App) handleVPNDisconnect(w http.ResponseWriter, r *http.Request) {
 	respond(http.StatusOK, true, "已发送断开连接请求", "")
 }
 
+func (a *App) handleVPNAutoConfig(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		a.writeActionError(w, r, http.StatusMethodNotAllowed, "仅支持 POST 请求")
+		return
+	}
+
+	if err := validateSameOriginRequest(r); err != nil {
+		a.writeActionError(w, r, http.StatusForbidden, err.Error())
+		return
+	}
+
+	if err := parseSubmittedForm(r); err != nil {
+		a.writeActionError(w, r, http.StatusBadRequest, "读取表单失败")
+		return
+	}
+
+	respond := func(statusCode int, ok bool, notice, flashError string) {
+		if wantsJSONResponse(r) {
+			a.writeJSON(w, statusCode, actionResponse{OK: ok, Notice: notice, Error: flashError, Reload: ok})
+			return
+		}
+
+		http.Redirect(w, r, buildIndexURL(notice, flashError, "", ""), http.StatusSeeOther)
+	}
+
+	if a.runner == nil || !a.runner.Enabled() {
+		respond(http.StatusServiceUnavailable, false, "", "VPN Runner 未配置，暂时无法保存自动连接偏好")
+		return
+	}
+
+	config := runner.NormalizeAutoSelectionConfig(runner.AutoSelectionConfig{
+		RegionPriority: []string{
+			r.FormValue("region1"),
+			r.FormValue("region2"),
+			r.FormValue("region3"),
+			r.FormValue("region4"),
+		},
+		SortPrimary: r.FormValue("sortPrimary"),
+	})
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	if _, err := a.runner.UpdateAutoSelectionConfig(ctx, config); err != nil {
+		respond(http.StatusBadGateway, false, "", fmt.Sprintf("保存自动连接偏好失败：%v", err))
+		return
+	}
+
+	respond(http.StatusOK, true, "自动连接偏好已保存，将在下一次自动选点时生效", "")
+}
+
 func (a *App) handleVPNStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		http.Error(w, "仅支持 GET 请求", http.StatusMethodNotAllowed)
@@ -667,9 +740,11 @@ func (a *App) buildPageData(notice, flashError, query, selectedCountry string) P
 	vpnStatusText, vpnStatusClass, vpnStatusDetail, vpnCurrentNode, vpnCurrentIP, vpnConnectedSince, vpnCanDisconnect := formatVPNStatus(runnerStatus, runnerErr)
 	vpnsocksUsername := ""
 	vpnsocksPassword := ""
+	autoSelection := runner.DefaultAutoSelectionConfig()
 	if runnerErr == nil {
 		vpnsocksUsername = runnerStatus.SocksUsername
 		vpnsocksPassword = runnerStatus.SocksPassword
+		autoSelection = runner.NormalizeAutoSelectionConfig(runnerStatus.AutoSelection)
 	}
 
 	a.mu.RLock()
@@ -800,7 +875,74 @@ func (a *App) buildPageData(notice, flashError, query, selectedCountry string) P
 		VPNCurrentIP:        vpnCurrentIP,
 		VPNConnectedSince:   vpnConnectedSince,
 		VPNCanDisconnect:    vpnCanDisconnect,
+		AutoRegionSlots:     buildAutoRegionSlots(autoSelection.RegionPriority, countryOptions),
+		AutoSortOptions:     buildAutoSortOptions(autoSelection.SortPrimary),
 	}
+}
+
+func buildAutoRegionSlots(regionPriority []string, countries []CountryOption) []AutoRegionSlot {
+	normalized := runner.NormalizeAutoSelectionConfig(runner.AutoSelectionConfig{RegionPriority: regionPriority}).RegionPriority
+	slots := make([]AutoRegionSlot, 4)
+	for i := range slots {
+		selected := ""
+		if i < len(normalized) {
+			selected = normalized[i]
+		}
+
+		slots[i] = AutoRegionSlot{
+			Name:    fmt.Sprintf("region%d", i+1),
+			Label:   fmt.Sprintf("第 %d 优选区域", i+1),
+			Options: buildAutoRegionOptions(selected, countries),
+		}
+	}
+
+	return slots
+}
+
+func buildAutoRegionOptions(selected string, countries []CountryOption) []AutoRegionOption {
+	options := []AutoRegionOption{
+		{Value: "", Label: "不指定", Selected: selected == ""},
+		{Value: "GLOBAL", Label: "不限区域", Selected: selected == "GLOBAL"},
+	}
+	foundSelected := selected == "" || selected == "GLOBAL"
+	for _, country := range countries {
+		option := AutoRegionOption{
+			Value:    country.Value,
+			Label:    country.Label,
+			Selected: country.Value == selected,
+		}
+		if option.Selected {
+			foundSelected = true
+		}
+		options = append(options, option)
+	}
+
+	if selected != "" && !foundSelected {
+		options = append(options, AutoRegionOption{
+			Value:    selected,
+			Label:    selected + "（当前配置）",
+			Selected: true,
+		})
+	}
+
+	return options
+}
+
+func buildAutoSortOptions(selected string) []AutoSortOption {
+	normalized := string(vpngate.NormalizeRecommendationSortPrimary(selected))
+	options := []AutoSortOption{
+		{Value: string(vpngate.SortPrimaryTotalUsersAsc), Label: "总用户数少"},
+		{Value: string(vpngate.SortPrimaryUptimeAsc), Label: "在线时长短"},
+		{Value: string(vpngate.SortPrimarySessionsAsc), Label: "会话数少"},
+		{Value: string(vpngate.SortPrimaryPingAsc), Label: "延迟低"},
+		{Value: string(vpngate.SortPrimaryScoreDesc), Label: "评分高"},
+		{Value: string(vpngate.SortPrimarySpeedDesc), Label: "速度高"},
+	}
+	for i := range options {
+		options[i].Selected = options[i].Value == normalized
+	}
+
+	return options
 }
 
 func (a *App) findServer(hostName, ip string) (vpngate.Server, bool) {

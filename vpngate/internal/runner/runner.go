@@ -127,16 +127,26 @@ func (r *Runner) Status() Status {
 
 	logs := append([]string(nil), r.logTail...)
 
+	socksListenAddr := ""
+	socksUsername := ""
+	socksPassword := ""
+	if r.socks != nil {
+		socksListenAddr = r.socks.ListenAddr()
+		socksUsername = r.socks.username
+		socksPassword = r.socks.password
+	}
+
 	return Status{
 		State:           r.state,
 		Current:         current,
-		SocksListenAddr: r.socks.ListenAddr(),
-		SocksUsername:   r.socks.username,
-		SocksPassword:   r.socks.password,
+		SocksListenAddr: socksListenAddr,
+		SocksUsername:   socksUsername,
+		SocksPassword:   socksPassword,
 		LastError:       r.lastError,
 		ConnectedAt:     r.connectedAt,
 		UpdatedAt:       r.updatedAt,
 		LogTail:         logs,
+		AutoSelection:   r.autoSelectionConfigLocked(),
 	}
 }
 

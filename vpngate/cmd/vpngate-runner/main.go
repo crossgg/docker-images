@@ -115,6 +115,8 @@ func autoPilotConfig() runner.AutoPilotConfig {
 		BaseQuarantine:          envDuration("NODE_QUARANTINE", 5*time.Minute),
 		BypassRouteTable:        envInt("BYPASS_ROUTE_TABLE", 100),
 		BypassMark:              envInt("BYPASS_FWMARK", 1),
+		RegionPriority:         envCSV("AUTO_REGION_PRIORITY"),
+		SortPrimary:            envString("AUTO_SORT_PRIMARY", ""),
 	}
 }
 
@@ -166,4 +168,21 @@ func envInt(key string, fallback int) int {
 	}
 
 	return parsed
+}
+
+func envCSV(key string) []string {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return nil
+	}
+
+	parts := strings.Split(value, ",")
+	result := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+
+	return result
 }

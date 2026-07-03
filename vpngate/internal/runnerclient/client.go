@@ -32,6 +32,11 @@ type testResponse struct {
 	Error  string                    `json:"error,omitempty"`
 }
 
+type autoConfigResponse struct {
+	Config runner.AutoSelectionConfig `json:"config"`
+	Error  string                     `json:"error,omitempty"`
+}
+
 func New(baseURL string, httpClient *http.Client) *Client {
 	baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
 	if httpClient == nil {
@@ -145,6 +150,65 @@ func (c *Client) TestServer(ctx context.Context, server vpngate.Server) (vpngate
 	}
 
 	return payload.Result, nil
+}
+
+func (c *Client) AutoSelectionConfig(ctx context.Context) (runner.AutoSelectionConfig, error) {
+	if !c.Enabled() {
+		return runner.AutoSelectionConfig{}, fmt.Errorf("Runner 控制接口未配置")
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+"/auto-config", nil)
+	if err != nil {
+		return runner.AutoSelectionConfig{}, err
+	}
+
+	return c.doAutoConfigRequest(req)
+}
+
+func (c *Client) UpdateAutoSelectionConfig(ctx context.Context, config runner.AutoSelectionConfig) (runner.AutoSelectionConfig, error) {
+	if !c.Enabled() {
+		return runner.AutoSelectionConfig{}, fmt.Errorf("Runner 控制接口未配置")
+	}
+
+	body, err := json.Marshal(config)
+	if err != nil {
+		return runner.AutoSelectionConfig{}, fmt.Errorf("序列化自动连接配置失败: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/auto-config", bytes.NewReader(body))
+	if err != nil {
+		return runner.AutoSelectionConfig{}, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	return c.doAutoConfigRequest(req)
+}
+
+func (c *Client) doAutoConfigRequest(req *http.Request) (runner.AutoSelectionConfig, error) {
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return runner.AutoSelectionConfig{}, err
+	}
+	defer resp.Body.Close()
+
+	var payload autoConfigResponse
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		return runner.AutoSelectionConfig{}, fmt.Errorf("解析 Runner 自动连接配置响应失败: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		if strings.TrimSpace(payload.Error) != "" {
+			return payload.Config, errors.New(payload.Error)
+		}
+
+		return payload.Config, fmt.Errorf("Runner 自动连接配置接口返回异常状态: %s", resp.Status)
+	}
+
+	if strings.TrimSpace(payload.Error) != "" {
+		return payload.Config, errors.New(payload.Error)
+	}
+
+	return payload.Config, nil
 }
 
 func (c *Client) doConnectRequest(req *http.Request) (runner.Status, error) {

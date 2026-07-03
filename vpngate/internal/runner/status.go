@@ -20,13 +20,14 @@ type ConnectionInfo struct {
 }
 
 type Status struct {
-	State           State           `json:"state"`
-	Current         *ConnectionInfo `json:"current,omitempty"`
-	SocksListenAddr string          `json:"socksListenAddr"`
-	SocksUsername   string          `json:"socksUsername,omitempty"`
-	SocksPassword   string          `json:"socksPassword,omitempty"`
-	LastError       string          `json:"lastError,omitempty"`
-	ConnectedAt     time.Time       `json:"connectedAt,omitempty"`
-	UpdatedAt       time.Time       `json:"updatedAt"`
-	LogTail         []string        `json:"logTail,omitempty"`
+	State           State               `json:"state"`
+	Current         *ConnectionInfo     `json:"current,omitempty"`
+	SocksListenAddr string              `json:"socksListenAddr"`
+	SocksUsername   string              `json:"socksUsername,omitempty"`
+	SocksPassword   string              `json:"socksPassword,omitempty"`
+	LastError       string              `json:"lastError,omitempty"`
+	ConnectedAt     time.Time           `json:"connectedAt,omitempty"`
+	UpdatedAt       time.Time           `json:"updatedAt"`
+	LogTail         []string            `json:"logTail,omitempty"`
+	AutoSelection   AutoSelectionConfig `json:"autoSelection"`
 }

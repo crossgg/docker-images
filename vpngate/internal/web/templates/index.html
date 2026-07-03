@@ -689,6 +689,39 @@
         </div>
       </section>
 
+      {{if .SupportsVPNControl}}
+      <section class="card">
+        <div class="toolbar" style="margin-bottom: 18px;">
+          <div>
+            <h2>自动连接偏好</h2>
+            <p>配置仅保存在当前 Runner 内存中，重启后会回到启动默认值；当前连接不会因保存偏好而中断。</p>
+          </div>
+        </div>
+        <form class="filters js-vpn-form" method="post" action="/vpn/auto-config">
+          {{range .AutoRegionSlots}}
+          {{$slot := .}}
+          <div class="field">
+            <label for="{{$slot.Name}}">{{$slot.Label}}</label>
+            <select id="{{$slot.Name}}" name="{{$slot.Name}}">
+              {{range $slot.Options}}
+              <option value="{{.Value}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
+              {{end}}
+            </select>
+          </div>
+          {{end}}
+          <div class="field">
+            <label for="sortPrimary">最高优先级</label>
+            <select id="sortPrimary" name="sortPrimary">
+              {{range .AutoSortOptions}}
+              <option value="{{.Value}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
+              {{end}}
+            </select>
+          </div>
+          <button class="btn btn-primary" type="submit" data-default-label="保存偏好" data-pending-label="保存中…">保存偏好</button>
+        </form>
+      </section>
+      {{end}}
+
       {{if .Notice}}
       <div class="notice">{{.Notice}}</div>
       {{end}}

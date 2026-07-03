@@ -45,3 +45,30 @@ func TestSortServersByRecommendation(t *testing.T) {
 		t.Fatalf("fourth host = %q, want %q", servers[3].HostName, "higher-users")
 	}
 }
+
+func TestSortServersByRecommendationWithPrimary(t *testing.T) {
+	servers := []Server{
+		{HostName: "default-winner", TotalUsers: 1, Uptime: 1, NumVPNSessions: 1, Ping: 5, Score: 100, Speed: 100},
+		{HostName: "score-winner", TotalUsers: 10, Uptime: 10, NumVPNSessions: 10, Ping: 50, Score: 999, Speed: 100},
+		{HostName: "runner-up", TotalUsers: 2, Uptime: 1, NumVPNSessions: 1, Ping: 5, Score: 500, Speed: 100},
+	}
+
+	SortServersByRecommendationWithPrimary(servers, SortPrimaryScoreDesc)
+
+	if servers[0].HostName != "score-winner" {
+		t.Fatalf("first host = %q, want %q", servers[0].HostName, "score-winner")
+	}
+}
+
+func TestSortServersByRecommendationWithPrimaryFallsBackToDefaultOrder(t *testing.T) {
+	servers := []Server{
+		{HostName: "higher-users", TotalUsers: 20, Uptime: 1, NumVPNSessions: 1, Ping: 5, Score: 999, Speed: 100},
+		{HostName: "winner", TotalUsers: 5, Uptime: 1, NumVPNSessions: 1, Ping: 5, Score: 999, Speed: 100},
+	}
+
+	SortServersByRecommendationWithPrimary(servers, SortPrimaryScoreDesc)
+
+	if servers[0].HostName != "winner" {
+		t.Fatalf("first host = %q, want %q", servers[0].HostName, "winner")
+	}
+}

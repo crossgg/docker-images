@@ -18,9 +18,11 @@ import (
 const (
 	autoLoopInterval               = 5 * time.Second
 	maxQuarantineBackoff           = 4
+	maxAutoRegionPriority          = 4
 	linuxSocketMarkOption          = 36
 	fullMonitorConfirmTTL          = time.Minute
 	defaultMonitorFailureThreshold = 3
+	autoRegionGlobal               = "GLOBAL"
 )
 
 type AutoPilotConfig struct {
@@ -38,6 +40,13 @@ type AutoPilotConfig struct {
 	BaseQuarantine          time.Duration
 	BypassRouteTable        int
 	BypassMark              int
+	RegionPriority          []string
+	SortPrimary             string
+}
+
+type AutoSelectionConfig struct {
+	RegionPriority []string `json:"regionPriority"`
+	SortPrimary    string   `json:"sortPrimary"`
 }
 
 type nodeHealth struct {
@@ -83,8 +92,79 @@ func (c AutoPilotConfig) withDefaults() AutoPilotConfig {
 	if c.BypassMark <= 0 {
 		c.BypassMark = 1
 	}
+	selectionConfig := NormalizeAutoSelectionConfig(AutoSelectionConfig{
+		RegionPriority: c.RegionPriority,
+		SortPrimary:    c.SortPrimary,
+	})
+	c.RegionPriority = selectionConfig.RegionPriority
+	c.SortPrimary = selectionConfig.SortPrimary
 
 	return c
+}
+
+func DefaultAutoSelectionConfig() AutoSelectionConfig {
+	return AutoSelectionConfig{
+		SortPrimary: string(vpngate.SortPrimaryTotalUsersAsc),
+	}
+}
+
+func NormalizeAutoSelectionConfig(config AutoSelectionConfig) AutoSelectionConfig {
+	normalized := DefaultAutoSelectionConfig()
+	normalized.SortPrimary = string(vpngate.NormalizeRecommendationSortPrimary(config.SortPrimary))
+	normalized.RegionPriority = normalizeAutoRegionPriority(config.RegionPriority)
+	return normalized
+}
+
+func normalizeAutoRegionPriority(regions []string) []string {
+	result := make([]string, 0, min(len(regions), maxAutoRegionPriority))
+	seen := make(map[string]struct{}, maxAutoRegionPriority)
+	for _, region := range regions {
+		normalized := strings.ToUpper(strings.TrimSpace(region))
+		switch normalized {
+		case "", "-":
+			continue
+		case "*", "ALL", "ANY", "GLOBAL":
+			normalized = autoRegionGlobal
+		}
+
+		if _, ok := seen[normalized]; ok {
+			continue
+		}
+
+		result = append(result, normalized)
+		seen[normalized] = struct{}{}
+		if len(result) >= maxAutoRegionPriority {
+			break
+		}
+	}
+
+	return result
+}
+
+func (r *Runner) AutoSelectionConfig() AutoSelectionConfig {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	return r.autoSelectionConfigLocked()
+}
+
+func (r *Runner) UpdateAutoSelectionConfig(config AutoSelectionConfig) AutoSelectionConfig {
+	normalized := NormalizeAutoSelectionConfig(config)
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.autoConfig.RegionPriority = normalized.RegionPriority
+	r.autoConfig.SortPrimary = normalized.SortPrimary
+	r.updatedAt = time.Now()
+	return normalized
+}
+
+func (r *Runner) autoSelectionConfigLocked() AutoSelectionConfig {
+	return NormalizeAutoSelectionConfig(AutoSelectionConfig{
+		RegionPriority: r.autoConfig.RegionPriority,
+		SortPrimary:    r.autoConfig.SortPrimary,
+	})
 }
 
 func (r *Runner) autoLoop(ctx context.Context) {
@@ -152,6 +232,7 @@ func (r *Runner) selectCandidate(servers []vpngate.Server) (vpngate.Server, erro
 	r.mu.RLock()
 	quarantine := make(map[string]nodeHealth, len(r.quarantine))
 	maps.Copy(quarantine, r.quarantine)
+	selectionConfig := r.autoSelectionConfigLocked()
 	r.mu.RUnlock()
 
 	for _, server := range servers {
@@ -171,9 +252,52 @@ func (r *Runner) selectCandidate(servers []vpngate.Server) (vpngate.Server, erro
 		return vpngate.Server{}, fmt.Errorf("没有可用于自动连接的 VPN 节点")
 	}
 
-	vpngate.SortServersByRecommendation(candidates)
+	server, ok := selectAutoCandidate(candidates, selectionConfig)
+	if !ok {
+		return vpngate.Server{}, fmt.Errorf("没有符合自动连接区域偏好的可用 VPN 节点")
+	}
 
-	return candidates[0], nil
+	return server, nil
+}
+
+func selectAutoCandidate(candidates []vpngate.Server, config AutoSelectionConfig) (vpngate.Server, bool) {
+	config = NormalizeAutoSelectionConfig(config)
+	if len(config.RegionPriority) == 0 {
+		return topAutoCandidate(candidates, config.SortPrimary)
+	}
+
+	for _, region := range config.RegionPriority {
+		filtered := make([]vpngate.Server, 0, len(candidates))
+		for _, candidate := range candidates {
+			if autoRegionMatches(candidate, region) {
+				filtered = append(filtered, candidate)
+			}
+		}
+
+		if server, ok := topAutoCandidate(filtered, config.SortPrimary); ok {
+			return server, true
+		}
+	}
+
+	return vpngate.Server{}, false
+}
+
+func topAutoCandidate(candidates []vpngate.Server, sortPrimary string) (vpngate.Server, bool) {
+	if len(candidates) == 0 {
+		return vpngate.Server{}, false
+	}
+
+	vpngate.SortServersByRecommendationWithPrimary(candidates, vpngate.NormalizeRecommendationSortPrimary(sortPrimary))
+	return candidates[0], true
+}
+
+func autoRegionMatches(server vpngate.Server, region string) bool {
+	normalizedRegion := strings.ToUpper(strings.TrimSpace(region))
+	if normalizedRegion == "" || normalizedRegion == autoRegionGlobal {
+		return true
+	}
+
+	return strings.EqualFold(server.CountryShort, normalizedRegion)
 }
 
 func (r *Runner) prepareMonitorTargets() error {
@@ -549,7 +673,7 @@ func newMarkedDialContext(timeout time.Duration, mark int) func(context.Context,
 	dialer.Control = func(network, address string, c syscall.RawConn) error {
 		var controlErr error
 		err := c.Control(func(fd uintptr) {
-			controlErr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, linuxSocketMarkOption, mark)
+			controlErr = setSocketMark(fd, mark)
 		})
 		if err != nil {
 			return err

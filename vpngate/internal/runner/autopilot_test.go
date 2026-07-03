@@ -44,6 +44,12 @@ func TestAutoPilotConfigWithDefaults(t *testing.T) {
 	if cfg.StableAfter != 10*time.Second {
 		t.Fatalf("StableAfter = %s, want %s", cfg.StableAfter, 10*time.Second)
 	}
+	if cfg.SortPrimary != string(vpngate.SortPrimaryTotalUsersAsc) {
+		t.Fatalf("SortPrimary = %q, want %q", cfg.SortPrimary, vpngate.SortPrimaryTotalUsersAsc)
+	}
+	if len(cfg.RegionPriority) != 0 {
+		t.Fatalf("RegionPriority = %v, want empty", cfg.RegionPriority)
+	}
 }
 
 func TestRunTCPPrecheck(t *testing.T) {
@@ -122,6 +128,74 @@ func TestSelectCandidatePrefersLowestUsersThenLowestUptimeThenLowestSessions(t *
 	}
 }
 
+func TestSelectCandidatePrefersConfiguredRegionBeforeDefaultRanking(t *testing.T) {
+	r := &Runner{
+		autoConfig: AutoPilotConfig{RegionPriority: []string{"KR", "JP"}}.withDefaults(),
+		quarantine: make(map[string]nodeHealth),
+	}
+
+	servers := []vpngate.Server{
+		{HostName: "jp-default-winner", IP: "1.1.1.1", CountryShort: "JP", TotalUsers: 1, Uptime: 1, NumVPNSessions: 1, OpenVPNConfigDataBase64: "cfg1"},
+		{HostName: "kr-region-winner", IP: "2.2.2.2", CountryShort: "KR", TotalUsers: 50, Uptime: 50, NumVPNSessions: 50, OpenVPNConfigDataBase64: "cfg2"},
+	}
+
+	server, err := r.selectCandidate(servers)
+	if err != nil {
+		t.Fatalf("selectCandidate() error = %v", err)
+	}
+
+	if server.HostName != "kr-region-winner" {
+		t.Fatalf("selectCandidate() host = %q, want %q", server.HostName, "kr-region-winner")
+	}
+}
+
+func TestSelectCandidateUsesConfiguredPrimarySortWithinRegion(t *testing.T) {
+	r := &Runner{
+		autoConfig: AutoPilotConfig{
+			RegionPriority: []string{"JP"},
+			SortPrimary:    string(vpngate.SortPrimaryScoreDesc),
+		}.withDefaults(),
+		quarantine: make(map[string]nodeHealth),
+	}
+
+	servers := []vpngate.Server{
+		{HostName: "lower-score", IP: "1.1.1.1", CountryShort: "JP", TotalUsers: 1, Uptime: 1, NumVPNSessions: 1, Score: 100, OpenVPNConfigDataBase64: "cfg1"},
+		{HostName: "higher-score", IP: "2.2.2.2", CountryShort: "JP", TotalUsers: 20, Uptime: 20, NumVPNSessions: 20, Score: 999, OpenVPNConfigDataBase64: "cfg2"},
+	}
+
+	server, err := r.selectCandidate(servers)
+	if err != nil {
+		t.Fatalf("selectCandidate() error = %v", err)
+	}
+
+	if server.HostName != "higher-score" {
+		t.Fatalf("selectCandidate() host = %q, want %q", server.HostName, "higher-score")
+	}
+}
+
+func TestSelectCandidateFallsThroughRegionPriority(t *testing.T) {
+	r := &Runner{
+		autoConfig: AutoPilotConfig{RegionPriority: []string{"KR", "JP"}}.withDefaults(),
+		quarantine: map[string]nodeHealth{
+			nodeKey("kr-blocked", "1.1.1.1"): {QuarantinedUntil: time.Now().Add(time.Minute)},
+		},
+	}
+
+	servers := []vpngate.Server{
+		{HostName: "kr-blocked", IP: "1.1.1.1", CountryShort: "KR", TotalUsers: 1, Uptime: 1, NumVPNSessions: 1, OpenVPNConfigDataBase64: "cfg1"},
+		{HostName: "jp-fallback", IP: "2.2.2.2", CountryShort: "JP", TotalUsers: 20, Uptime: 20, NumVPNSessions: 20, OpenVPNConfigDataBase64: "cfg2"},
+	}
+
+	server, err := r.selectCandidate(servers)
+	if err != nil {
+		t.Fatalf("selectCandidate() error = %v", err)
+	}
+
+	if server.HostName != "jp-fallback" {
+		t.Fatalf("selectCandidate() host = %q, want %q", server.HostName, "jp-fallback")
+	}
+}
+
 func TestRunMonitorCheckRequiresConsecutiveFailuresBeforeSwitch(t *testing.T) {
 	r := &Runner{
 		autoConfig: AutoPilotConfig{MonitorURL: "https://www.gstatic.com/generate_204", MonitorFailureThreshold: 3},
@@ -152,7 +226,7 @@ func TestProbeMonitorViaSOCKS(t *testing.T) {
 	var logBuffer bytes.Buffer
 	logger := log.New(&logBuffer, "", 0)
 
-	socks, err := newSOCKSServer(logger, "127.0.0.1:0", func() bool { return true })
+	socks, err := newSOCKSServer(logger, "127.0.0.1:0", func() bool { return true }, "", "")
 	if err != nil {
 		t.Fatalf("newSOCKSServer() error = %v", err)
 	}
@@ -176,7 +250,7 @@ func TestProbeMonitorViaSOCKS(t *testing.T) {
 }
 
 func TestSOCKSServerDialAddrUsesLoopbackForWildcardListener(t *testing.T) {
-	socks, err := newSOCKSServer(log.New(&bytes.Buffer{}, "", 0), "0.0.0.0:0", func() bool { return true })
+	socks, err := newSOCKSServer(log.New(&bytes.Buffer{}, "", 0), "0.0.0.0:0", func() bool { return true }, "", "")
 	if err != nil {
 		t.Fatalf("newSOCKSServer() error = %v", err)
 	}
@@ -186,7 +260,11 @@ func TestSOCKSServerDialAddrUsesLoopbackForWildcardListener(t *testing.T) {
 	if strings.HasPrefix(dialAddr, "0.0.0.0:") {
 		t.Fatalf("DialAddr() = %q, should use loopback host", dialAddr)
 	}
-	if !strings.HasPrefix(dialAddr, "127.0.0.1:") {
-		t.Fatalf("DialAddr() = %q, want loopback IPv4 address", dialAddr)
+	host, _, err := net.SplitHostPort(dialAddr)
+	if err != nil {
+		t.Fatalf("SplitHostPort(%q) error = %v", dialAddr, err)
+	}
+	if ip := net.ParseIP(host); ip == nil || !ip.IsLoopback() {
+		t.Fatalf("DialAddr() = %q, want loopback address", dialAddr)
 	}
 }

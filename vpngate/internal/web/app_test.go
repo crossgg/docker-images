@@ -245,6 +245,76 @@ func TestHandleVPNConnectRecommendedConnectsBestFilteredServer(t *testing.T) {
 	}
 }
 
+func TestHandleVPNAutoConfigForwardsSelectionConfig(t *testing.T) {
+	configCh := make(chan runner.AutoSelectionConfig, 1)
+	runnerServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/auto-config" {
+			http.NotFound(w, r)
+			return
+		}
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		defer r.Body.Close()
+		var config runner.AutoSelectionConfig
+		if err := json.NewDecoder(r.Body).Decode(&config); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		configCh <- config
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"config": config,
+		})
+	}))
+	defer runnerServer.Close()
+
+	app := mustNewTestApp(t, latestListResponse("fresh-node", "2.2.2.2", 200), runnerServer.URL, runnerServer.Client())
+	form := url.Values{
+		"region1":     []string{"jp"},
+		"region2":     []string{"GLOBAL"},
+		"region3":     []string{""},
+		"region4":     []string{"kr"},
+		"sortPrimary": []string{string(vpngate.SortPrimaryScoreDesc)},
+	}
+	req := httptest.NewRequest(http.MethodPost, "/vpn/auto-config", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	req.Header.Set("Accept", "application/json")
+
+	recorder := httptest.NewRecorder()
+	app.handleVPNAutoConfig(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("handleVPNAutoConfig() status = %d, want %d", recorder.Code, http.StatusOK)
+	}
+
+	var received runner.AutoSelectionConfig
+	select {
+	case received = <-configCh:
+	default:
+		t.Fatal("runner auto-config request was not received")
+	}
+
+	wantRegions := []string{"JP", "GLOBAL", "KR"}
+	if strings.Join(received.RegionPriority, ",") != strings.Join(wantRegions, ",") {
+		t.Fatalf("RegionPriority = %v, want %v", received.RegionPriority, wantRegions)
+	}
+	if received.SortPrimary != string(vpngate.SortPrimaryScoreDesc) {
+		t.Fatalf("SortPrimary = %q, want %q", received.SortPrimary, vpngate.SortPrimaryScoreDesc)
+	}
+
+	var response actionResponse
+	if err := json.NewDecoder(recorder.Body).Decode(&response); err != nil {
+		t.Fatalf("Decode() error = %v", err)
+	}
+	if !response.OK {
+		t.Fatalf("handleVPNAutoConfig() response.OK = false, error = %q", response.Error)
+	}
+}
+
 func mustNewTestApp(t *testing.T, listResponse, runnerURL string, runnerHTTPClient *http.Client) *App {
 	t.Helper()
 

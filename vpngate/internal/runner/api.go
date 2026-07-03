@@ -24,6 +24,11 @@ type testResponse struct {
 	Error  string                    `json:"error,omitempty"`
 }
 
+type autoConfigResponse struct {
+	Config AutoSelectionConfig `json:"config"`
+	Error  string              `json:"error,omitempty"`
+}
+
 func NewAPIHandler(logger *log.Logger, runner *Runner) http.Handler {
 	if logger == nil {
 		logger = log.Default()
@@ -46,6 +51,25 @@ func NewAPIHandler(logger *log.Logger, runner *Runner) http.Handler {
 		}
 
 		writeJSON(w, http.StatusOK, runner.Status())
+	})
+
+	mux.HandleFunc("/auto-config", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet, http.MethodHead:
+			writeJSON(w, http.StatusOK, autoConfigResponse{Config: runner.AutoSelectionConfig()})
+		case http.MethodPost:
+			var req AutoSelectionConfig
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				writeJSON(w, http.StatusBadRequest, autoConfigResponse{Config: runner.AutoSelectionConfig(), Error: "读取自动连接配置失败"})
+				return
+			}
+
+			config := runner.UpdateAutoSelectionConfig(req)
+			logger.Printf("自动连接偏好已更新：区域=%v，排序=%s", config.RegionPriority, config.SortPrimary)
+			writeJSON(w, http.StatusOK, autoConfigResponse{Config: config})
+		default:
+			http.Error(w, "仅支持 GET/POST 请求", http.StatusMethodNotAllowed)
+		}
 	})
 
 	mux.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
