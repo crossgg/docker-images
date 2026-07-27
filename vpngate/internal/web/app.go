@@ -208,6 +208,12 @@ func (a *App) Routes() http.Handler {
 
 func (a *App) basicAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 跳过健康检查路径的认证，避免 Docker/K8s HEALTHCHECK 被误打回 401
+		if r.URL.Path == "/health" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		// 从环境变量获取用户名和密码
 		username := os.Getenv("WEB_USERNAME")
 		password := os.Getenv("WEB_PASSWORD")
