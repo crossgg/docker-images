@@ -9,10 +9,7 @@
 # 覆盖范围：QQ 登录与收发消息的核心协议流量
 # 代理类型：必须是 SOCKS5（proxyType 2 在源码中硬编码，不可选 HTTP；也不支持带密码）
 #
-# 环境变量：全部放在同目录的 env.txt（docker compose 自动读取，无需手动 export）
-#   顶层 env_file  → 让 ${} 占位符（端口等）也能从 env.txt 取值
-#   服务 env_file  → 把变量注入容器（兼容老版本 compose）
-#
+# 修改.env
 # 启动：docker compose up -d
 # ============================================================================
 
@@ -22,10 +19,6 @@ services:
     container_name: napcat
     restart: unless-stopped
     network_mode: bridge
-
-    # 容器运行环境变量从 env.txt 注入（替代原来的 inline environment:）
-    env_file:
-      - ./env.txt
 
     ports:
       - "${OB_HTTP_PORT:-6001}:${OB_HTTP_PORT:-6001}"   # OneBot HTTP 服务端（青龙 GOBOT_URL 用这个端口）
@@ -39,7 +32,9 @@ services:
 
     # QQ 是 Electron 应用，共享内存给小了会崩
     shm_size: "512m"
-
+    
+    # MAC地址固定：
+    mac_address: "${MAC:-}
     # Docker Desktop（Windows/macOS）访问宿主机代理时需要这行；
     # Linux 上用 172.17.0.1 则不需要，留着也无害
     extra_hosts:
