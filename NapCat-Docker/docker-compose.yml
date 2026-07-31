@@ -1,5 +1,5 @@
 # ============================================================================
-# 方案 A：NapCat 原生 SOCKS5 代理（推荐首选）
+# NapCat 原生 SOCKS5 代理部署
 #
 # 依据：NapCat 源码 packages/napcat-shell/base.ts 的 handleProxy()
 #   读取 NAPCAT_PROXY_ADDRESS / NAPCAT_PROXY_PORT
@@ -7,38 +7,33 @@
 #   即直接设置 QQ MSF 网络层代理 —— 这是 QQ 自己的协议栈代理接口
 #
 # 覆盖范围：QQ 登录与收发消息的核心协议流量
-# 代理类型：必须是 SOCKS5（proxyType 2 在源码中硬编码，不可选 HTTP）
+# 代理类型：必须是 SOCKS5（proxyType 2 在源码中硬编码，不可选 HTTP；也不支持带密码）
 #
-# 启动：docker compose -f docker-compose.native-proxy.yml up -d
+# 环境变量：全部放在同目录的 env.txt（docker compose 自动读取，无需手动 export）
+#   顶层 env_file  → 让 ${} 占位符（端口等）也能从 env.txt 取值
+#   服务 env_file  → 把变量注入容器（兼容老版本 compose）
+#
+# 启动：docker compose up -d
 # ============================================================================
+
+# 顶层 env_file：让 ${} 占位符（端口等）也能从 env.txt 取值（需 Docker Compose v2.24.0+）
+env_file:
+  - ./env.txt
 
 services:
   napcat:
     image: mlikiowa/napcat-docker:latest
     container_name: napcat
-    restart: always
+    restart: unless-stopped
     network_mode: bridge
 
-    environment:
-      # ---- 权限：让挂载目录归宿主机当前用户，避免 root 属主文件 ----
-      - NAPCAT_UID=${NAPCAT_UID:-1000}
-      - NAPCAT_GID=${NAPCAT_GID:-1000}
-      # QQ代理设置
-      - NAPCAT_PROXY_ADDRESS=${PROXY_HOST:-172.17.0.1}
-      - NAPCAT_PROXY_PORT=${PROXY_PORT:-7890}
-
-      # 想临时关掉代理：注释掉上面两行，改用下面这行
-      # - NAPCAT_PROXY_CLOSE=1
-
-      # ---- WebUI 登录 Token（不设则每次启动随机生成，需查日志）----
-      - WEBUI_TOKEN=${WEBUI_TOKEN:-napcat111}
-
-      # ---- 快速登录：填 QQ 号可跳过扫码（需先手动登录过一次）----
-      # - ACCOUNT=123456789
+    # 容器运行环境变量从 env.txt 注入（替代原来的 inline environment:）
+    env_file:
+      - ./env.txt
 
     ports:
-      - "60234:60234"   # OneBot HTTP 服务端
-      #- "${OB_WS_PORT:-3001}:3001"     # OneBot WebSocket
+      - "${OB_HTTP_PORT:-6001}:${OB_HTTP_PORT:-6001}"   # OneBot HTTP 服务端（青龙 GOBOT_URL 用这个端口）
+      - "${OB_WS_PORT:-6002}:${OB_WS_PORT:-6002}"     # OneBot WebSocket
       - "${WEBUI_PORT:-6099}:6099"     # WebUI（公网部署务必改端口或加防火墙）
 
     volumes:
@@ -48,11 +43,11 @@ services:
 
     # QQ 是 Electron 应用，共享内存给小了会崩
     shm_size: "512m"
-    mac_address: "02:42:ac:11:00:02"
+
     # Docker Desktop（Windows/macOS）访问宿主机代理时需要这行；
     # Linux 上用 172.17.0.1 则不需要，留着也无害
-    #extra_hosts:
-    #  - "host.docker.internal:host-gateway"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     logging:
       driver: json-file
