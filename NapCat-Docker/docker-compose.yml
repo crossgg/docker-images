@@ -16,10 +16,6 @@
 # 启动：docker compose up -d
 # ============================================================================
 
-# 顶层 env_file：让 ${} 占位符（端口等）也能从 env.txt 取值（需 Docker Compose v2.24.0+）
-env_file:
-  - ./env.txt
-
 services:
   napcat:
     image: mlikiowa/napcat-docker:latest
