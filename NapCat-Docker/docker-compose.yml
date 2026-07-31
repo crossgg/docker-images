@@ -32,9 +32,8 @@ services:
 
     # QQ 是 Electron 应用，共享内存给小了会崩
     shm_size: "512m"
-    
     # MAC地址固定：
-    mac_address: "${MAC:-}
+    mac_address: "${MAC:-}"
     # Docker Desktop（Windows/macOS）访问宿主机代理时需要这行；
     # Linux 上用 172.17.0.1 则不需要，留着也无害
     extra_hosts:
