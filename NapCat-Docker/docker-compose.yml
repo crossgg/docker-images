@@ -1,0 +1,61 @@
+# ============================================================================
+# 方案 A：NapCat 原生 SOCKS5 代理（推荐首选）
+#
+# 依据：NapCat 源码 packages/napcat-shell/base.ts 的 handleProxy()
+#   读取 NAPCAT_PROXY_ADDRESS / NAPCAT_PROXY_PORT
+#   调用 session.getMSFService().setNetworkProxy({ proxyType: 2, isSocket: true })
+#   即直接设置 QQ MSF 网络层代理 —— 这是 QQ 自己的协议栈代理接口
+#
+# 覆盖范围：QQ 登录与收发消息的核心协议流量
+# 代理类型：必须是 SOCKS5（proxyType 2 在源码中硬编码，不可选 HTTP）
+#
+# 启动：docker compose -f docker-compose.native-proxy.yml up -d
+# ============================================================================
+
+services:
+  napcat:
+    image: mlikiowa/napcat-docker:latest
+    container_name: napcat
+    restart: always
+    network_mode: bridge
+
+    environment:
+      # ---- 权限：让挂载目录归宿主机当前用户，避免 root 属主文件 ----
+      - NAPCAT_UID=${NAPCAT_UID:-1000}
+      - NAPCAT_GID=${NAPCAT_GID:-1000}
+      # QQ代理设置
+      - NAPCAT_PROXY_ADDRESS=${PROXY_HOST:-172.17.0.1}
+      - NAPCAT_PROXY_PORT=${PROXY_PORT:-7890}
+
+      # 想临时关掉代理：注释掉上面两行，改用下面这行
+      # - NAPCAT_PROXY_CLOSE=1
+
+      # ---- WebUI 登录 Token（不设则每次启动随机生成，需查日志）----
+      - WEBUI_TOKEN=${WEBUI_TOKEN:-napcat111}
+
+      # ---- 快速登录：填 QQ 号可跳过扫码（需先手动登录过一次）----
+      # - ACCOUNT=123456789
+
+    ports:
+      - "60234:60234"   # OneBot HTTP 服务端
+      #- "${OB_WS_PORT:-3001}:3001"     # OneBot WebSocket
+      - "${WEBUI_PORT:-6099}:6099"     # WebUI（公网部署务必改端口或加防火墙）
+
+    volumes:
+      - ./data/qq:/app/.config/QQ           # QQ 登录态，持久化后可快速登录
+      - ./data/config:/app/napcat/config    # NapCat 配置
+      - ./data/plugins:/app/napcat/plugins  # 插件目录
+
+    # QQ 是 Electron 应用，共享内存给小了会崩
+    shm_size: "512m"
+    mac_address: "02:42:ac:11:00:02"
+    # Docker Desktop（Windows/macOS）访问宿主机代理时需要这行；
+    # Linux 上用 172.17.0.1 则不需要，留着也无害
+    #extra_hosts:
+    #  - "host.docker.internal:host-gateway"
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
