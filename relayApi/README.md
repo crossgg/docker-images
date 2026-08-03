@@ -11,7 +11,16 @@
 
 6. 都没有? 买个玩客云吧,30块钱,转发流量够用了
 
-7. 虚拟机安装容器,或多或少有点问题,不通过请自行解决
+7. 虚拟机安装容器,或多或少有点问题,不通过请自行解决 (需要开启)
+
+    如果 `主机` 是运行在 **Hyper-V、PVE (Proxmox)、VMware 或 ESXi** 上的虚拟机，必须在**虚拟化平台侧**允许 MAC 伪造/混杂模式，否则虚拟机外部的网络依然通不了：
+
+   1. **Hyper-V**：
+      - 找到 `主机` 虚拟机设置 -> 展开网卡 (Network Adapter) -> **高级功能 (Advanced Features)** -> 勾选 **启用 MAC 地址伪造 (Enable MAC Address Spoofing)**。
+   2. **PVE (Proxmox VE)**：
+      - 在 PVE 界面中找到 `主机` 虚拟机 -> 网卡 (Hardware -> Network Device) -> 取消勾选 `MAC Filter`（MAC 过滤）。
+   3. **VMware Workstation / ESXi**：
+      - 虚拟网络编辑器 / vSwitch 设置 -> 找到对应的虚拟网卡 -> **混杂模式 (Promiscuous Mode)** 设为 **接受 (Accept)**。
 ## 二、配置详解(IP模式)
 ### ~~0. 创建镜像~~ 
 
@@ -27,7 +36,7 @@ docker pull crosscc/psyduck
 
 ### 2. 创建网络
 ```
-docker network create -d macvlan   --subnet=192.168.100.0/24   --gateway=192.168.100.1   --ipv6   --subnet=fdfa:5a35:6fce::/64 -o parent=eth0 crosscc/psyduck
+docker network create -d macvlan   --subnet=10.0.0.0/24   --gateway=10.0.0.2   --ipv6   --subnet=fdfa:5a35:6fce::/64 -o parent=eth0 psyduck
 ```
 
 
@@ -40,7 +49,7 @@ docker network create -d macvlan   --subnet=192.168.100.0/24   --gateway=192.168
 
 ### 3. 创建容器(ip模式)
 ```
-docker run -d --name psyduck31 --restart=always --ip=192.168.100.31 --privileged --network psyduck -e GATEWAY=192.168.100.1  crosscc/psyduck
+docker run -d --name psyduck201 --restart=unless-stopped --ip=10.0.0.201 --privileged --network psyduck --dns=10.0.0.2 -e GATEWAY=10.0.0.2  docker.1ms.run/crosscc/relayapi
 ```
 
 
