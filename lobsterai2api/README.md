@@ -23,8 +23,6 @@ docker run -d \
 推荐使用 Docker Compose 进行快速部署，新建 `docker-compose.yml` 文件：
 
 ```yaml
-version: '3.8'
-
 services:
   lobsterai2api:
     image: crosscc/lobsterai2api:latest
@@ -42,6 +40,32 @@ docker compose up -d
 ```
 
 
+## 账号登录授权（添加新账号）
+
+容器内已集成编译好的登录授权工具 `/app/login`，支持通过 `docker exec` 直接操作添加新账号：
+
+### 第一步：生成登录链接
+```bash
+docker exec -it lobsterai2api /app/login url
+```
+> 执行后终端会启动本地回调服务器并打印出授权 URL 链接。
+
+### 第二步：浏览器扫码/登录
+复制终端中打印出来的 URL 链接，在电脑浏览器中打开，完成手机号或微信登录。
+
+### 第三步：获取 Token 并保存凭证
+```bash
+docker exec -it lobsterai2api /app/login poll
+```
+> 登录完成后执行此命令，等待回调换取 Token，账号凭证会自动保存为 `/data/auths/lobsterai-<uid>.json`。
+
+### 附加功能：查询账号额度
+```bash
+docker exec -it lobsterai2api /app/credit
+```
+> 输出当前已保存账号的剩余额度与健康状态（JSON 格式）。
+
+
 ## 目录映射说明
 
 | 容器内路径 | 对应功能 | 说明 |
@@ -50,3 +74,4 @@ docker compose up -d
 | `/data/config.json` | 配置文件 | 启动时如不存在会自动新建 |
 | `/data/auths/` | 账号 Token 目录 | 存放所有登录成功的账号凭证 (`lobsterai-*.json`) |
 | `/data/state.json` | 运行状态文件 | 记录账号冷却与运行状态 |
+

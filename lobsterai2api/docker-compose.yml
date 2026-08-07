@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   lobsterai2api:
-    image: ${DOCKER_USERNAME:-your-dockerhub-username}/lobsterai2api:latest
+    image: crosscc/lobsterai2api:latest
     container_name: lobsterai2api
-    restart: always
+    restart: unless-stopped
     ports:
       - "8367:8367"
     volumes:
