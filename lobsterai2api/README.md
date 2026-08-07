@@ -42,28 +42,35 @@ docker compose up -d
 
 ## 账号登录授权（添加新账号）
 
-容器内已集成编译好的登录授权工具 `/app/login`，支持通过 `docker exec` 直接操作添加新账号：
+容器内已集成编译好的登录授权工具 `/app/login`，推荐使用 **2 个终端窗口** 进行操作：
 
-### 第一步：生成登录链接
+### 第一步：启动登录监听服务（终端窗口 1）
 ```bash
 docker exec -it lobsterai2api /app/login url
 ```
-> 执行后终端会启动本地回调服务器并打印出授权 URL 链接。
+> **注意**：执行后终端会启动一个临时的 HTTP 回调服务器并输出授权 URL。**必须保持该窗口打开，切勿按下 Ctrl+C 终止进程！**
 
-### 第二步：浏览器扫码/登录
-复制终端中打印出来的 `https://lobsterai.youdao.com/...` 链接在电脑浏览器中打开，完成手机号或微信登录。登录成功后，浏览器地址栏会跳转至一个无法打开的 `http://127.0.0.1:端口/auth/callback?code=...&state=...` 地址，**复制此完整的跳转 URL**。
+### 第二步：浏览器登录并复制跳转地址
+复制终端窗口 1 打印出来的 `https://lobsterai.youdao.com/...` 链接在电脑浏览器中打开，完成手机号或微信登录。登录成功后，浏览器地址栏会跳转至一个无法打开的 `http://127.0.0.1:端口/auth/callback?code=...&state=...` 地址，**完整复制此跳转 URL**。
 
-### 第三步：发送回调给容器（远程 VPS 部署必看）
-由于 `127.0.0.1` 回调服务运行在远程容器内部，本地电脑浏览器无法直接访问。需要在 VPS 终端执行 `curl` 手动触发回调（**注意：必须使用英文双引号 `"..."` 包裹 URL**）：
+### 第三步：发送回调给容器（终端窗口 2）
+打开**第二个终端窗口**，运行 `curl` 将回调触发给容器（**注意：必须使用英文双引号 `"..."` 包裹 URL，且端口号需与窗口 1 一致**）：
 ```bash
 docker exec -it lobsterai2api curl "http://127.0.0.1:端口/auth/callback?code=你的code&state=你的state"
 ```
 
-### 第四步：获取 Token 并落盘保存凭证
+### 第四步：获取 Token 并落盘保存凭证（终端窗口 2）
+在**第二个终端窗口**中执行：
 ```bash
 docker exec -it lobsterai2api /app/login poll
 ```
 > 触发回调后执行此命令，换取 Token 并自动将账号凭证保存至 `/data/auths/lobsterai-<uid>.json`。
+
+---
+
+> 💡 **单终端窗口操作技巧**：
+> 如果只有一个终端窗口，可以在第一步加上 `&` 放到后台运行：
+> `docker exec -it lobsterai2api sh -c "/app/login url &"`，之后直接在当前窗口顺序执行第三步 `curl` 和第四步 `poll` 命令。
 
 ### 附加功能：查询账号额度
 ```bash

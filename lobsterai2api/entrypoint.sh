@@ -8,6 +8,13 @@ AUTHS_DIR="${DATA_DIR}/auths"
 # 确保数据目录与授权文件目录存在
 mkdir -p "$DATA_DIR" "$AUTHS_DIR"
 
+# 建立软链接：若 /app/auths 是普通目录，先将其中的账号文件迁移至挂载卷 /data/auths
+if [ -d "/app/auths" ] && [ ! -L "/app/auths" ]; then
+    cp -rn /app/auths/* "$AUTHS_DIR"/ 2>/dev/null || true
+    rm -rf /app/auths
+fi
+ln -sfn "$AUTHS_DIR" /app/auths
+
 # 如果 /data/config.json 不存在，自动使用默认配置进行初始化
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "[Init] 未检测到 config.json，正在自动初始化配置文件至 ${CONFIG_FILE}..."
