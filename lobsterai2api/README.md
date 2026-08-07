@@ -51,19 +51,26 @@ docker exec -it lobsterai2api /app/login url
 > 执行后终端会启动本地回调服务器并打印出授权 URL 链接。
 
 ### 第二步：浏览器扫码/登录
-复制终端中打印出来的 URL 链接，在电脑浏览器中打开，完成手机号或微信登录。
+复制终端中打印出来的 `https://lobsterai.youdao.com/...` 链接在电脑浏览器中打开，完成手机号或微信登录。登录成功后，浏览器地址栏会跳转至一个无法打开的 `http://127.0.0.1:端口/auth/callback?code=...&state=...` 地址，**复制此完整的跳转 URL**。
 
-### 第三步：获取 Token 并保存凭证
+### 第三步：发送回调给容器（远程 VPS 部署必看）
+由于 `127.0.0.1` 回调服务运行在远程容器内部，本地电脑浏览器无法直接访问。需要在 VPS 终端执行 `curl` 手动触发回调（**注意：必须使用英文双引号 `"..."` 包裹 URL**）：
 ```bash
-docker exec -it lobsterai2api /app/login poll <fallbackurl>
+docker exec -it lobsterai2api curl "http://127.0.0.1:端口/auth/callback?code=你的code&state=你的state"
 ```
-> 登录完成后执行此命令，等待回调换取 Token，账号凭证会自动保存为 `/data/auths/lobsterai-<uid>.json`。
+
+### 第四步：获取 Token 并落盘保存凭证
+```bash
+docker exec -it lobsterai2api /app/login poll
+```
+> 触发回调后执行此命令，换取 Token 并自动将账号凭证保存至 `/data/auths/lobsterai-<uid>.json`。
 
 ### 附加功能：查询账号额度
 ```bash
 docker exec -it lobsterai2api /app/credit
 ```
 > 输出当前已保存账号的剩余额度与健康状态（JSON 格式）。
+
 
 
 ## 目录映射说明
