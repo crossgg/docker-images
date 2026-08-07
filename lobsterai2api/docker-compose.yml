@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  lobsterai2api:
+    image: ${DOCKER_USERNAME:-your-dockerhub-username}/lobsterai2api:latest
+    container_name: lobsterai2api
+    restart: always
+    ports:
+      - "8367:8367"
+    volumes:
+      - ./data:/data
