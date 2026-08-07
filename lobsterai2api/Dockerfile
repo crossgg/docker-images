@@ -10,7 +10,7 @@ RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o lobsterai2api ./cmd/server && \
 # 阶段二：轻量级运行时镜像
 FROM alpine:latest
 WORKDIR /app
-RUN apk add --no-cache ca-certificates tzdata bash
+RUN apk add --no-cache ca-certificates tzdata bash curl
 ENV TZ=Asia/Shanghai
 
 COPY --from=builder /app/lobsterai2api /app/
