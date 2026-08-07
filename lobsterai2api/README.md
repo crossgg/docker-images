@@ -55,7 +55,7 @@ docker exec -it lobsterai2api /app/login url
 
 ### 第三步：获取 Token 并保存凭证
 ```bash
-docker exec -it lobsterai2api /app/login poll
+docker exec -it lobsterai2api /app/login poll <fallbackurl>
 ```
 > 登录完成后执行此命令，等待回调换取 Token，账号凭证会自动保存为 `/data/auths/lobsterai-<uid>.json`。
 
