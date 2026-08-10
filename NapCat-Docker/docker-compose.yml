@@ -20,6 +20,9 @@ services:
     restart: unless-stopped
     network_mode: bridge
 
+    env_file:
+      - .env
+
     ports:
       - "${OB_HTTP_PORT:-6001}:${OB_HTTP_PORT:-6001}"   # OneBot HTTP 服务端（青龙 GOBOT_URL 用这个端口）
       - "${OB_WS_PORT:-6002}:${OB_WS_PORT:-6002}"     # OneBot WebSocket
