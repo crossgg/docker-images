@@ -1,0 +1,30 @@
+# ============================================================================
+# YYB-Go-Enhanced Docker Compose 部署配置
+# 
+# 部署说明：
+#   1. 若与青龙面板共享 Docker 网络，请先创建网络：docker network create qinglong_default
+#   2. 复制配置文件并修改密码：cp .env.example .env
+#   3. 启动容器：docker compose up -d
+# ============================================================================
+
+services:
+  yyb-go-enhanced:
+    image: crosscc/yyb-go-enhanced:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yyb-go-enhanced
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${YYB_PORT:-8000}:8000"
+    volumes:
+      - ./data:/app/data
+    networks:
+      - default
+      - qinglong_default
+
+networks:
+  qinglong_default:
+    external: true
