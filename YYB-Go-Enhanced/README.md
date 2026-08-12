@@ -24,7 +24,7 @@
 
 ```bash
 docker run -d \
-  --name yyb-go-enhanced \
+  --name yyb \
   --restart=unless-stopped \
   -p 8000:8000 \
   -e YYB_WEB_USER=admin \

@@ -8,12 +8,12 @@
 # ============================================================================
 
 services:
-  yyb-go-enhanced:
+  yyb:
     image: crosscc/yyb-go-enhanced:latest
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: yyb-go-enhanced
+    container_name: yyb
     restart: unless-stopped
     env_file:
       - .env
@@ -22,7 +22,6 @@ services:
     volumes:
       - ./data:/app/resource/db
     networks:
-      - default
       - qinglong_default
 
 networks:
