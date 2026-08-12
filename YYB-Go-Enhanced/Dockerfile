@@ -1,7 +1,7 @@
 # --- 阶段 1: 编译阶段 ---
 FROM golang:1.23-alpine AS build
 
-ARG REPO_URL="https://github.com/525815266/YYB-Go-Enhanced.git"
+ARG REPO_URL="https://github.com/crossgg/YYB-Go-Enhanced.git"
 ARG BRANCH="main"
 
 RUN apk add --no-cache git ca-certificates tzdata
