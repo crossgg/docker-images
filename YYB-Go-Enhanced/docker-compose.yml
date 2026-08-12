@@ -20,7 +20,7 @@ services:
     ports:
       - "${YYB_PORT:-8000}:8000"
     volumes:
-      - ./data:/app/data
+      - ./data:/app/resource/db
     networks:
       - default
       - qinglong_default

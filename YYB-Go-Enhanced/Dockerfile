@@ -14,7 +14,7 @@ RUN git clone -b ${BRANCH} --single-branch ${REPO_URL} .
 ENV GOPROXY=https://goproxy.cn,direct
 RUN go mod download
 
-# 编译
+# 编译生成二进制文件
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/yyb-go ./cmd/yyb-go
 
 # --- 阶段 2: 运行阶段 ---
@@ -28,14 +28,18 @@ RUN apk add --no-cache ca-certificates wget tzdata \
 
 WORKDIR /app
 
-# 拷贝二进制程序与静态资源
+# 拷贝二进制程序与静态资源模板
 COPY --from=build /out/yyb-go /app/yyb-go
-COPY --from=build /src/resource /app/resource
+COPY --from=build /src/resource /tmp/resource-src
 
-RUN mkdir -p /app/data && chown -R yyb:yyb /app
+RUN mkdir -p /app/resource/db /app/data \
+    && cp -rn /tmp/resource-src/* /app/resource/ 2>/dev/null || true \
+    && rm -rf /tmp/resource-src \
+    && chown -R yyb:yyb /app
 
 USER yyb
 
 EXPOSE 8000
 
-CMD ["/app/yyb-go"]
+ENTRYPOINT ["/app/yyb-go"]
+CMD ["-host", "0.0.0.0", "-port", "8000", "-resource-root", "/app/resource"]

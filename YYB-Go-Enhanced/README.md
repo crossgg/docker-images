@@ -29,7 +29,7 @@ docker run -d \
   -p 8000:8000 \
   -e YYB_WEB_USER=admin \
   -e YYB_WEB_PASSWORD=修改为你的强密码 \
-  -v $PWD/data:/app/data \
+  -v $PWD/data:/app/resource/db \
   crosscc/yyb-go-enhanced:latest
 ```
 
@@ -75,7 +75,7 @@ YYB_WEB_PASSWORD=YourSecurePassword
 
 ---
 
-## 环境变量说明
+## 完整环境变量说明（.env）
 
 | 环境变量 | 默认值 | 说明 |
 | :--- | :--- | :--- |
@@ -85,12 +85,17 @@ YYB_WEB_PASSWORD=YourSecurePassword
 | `YYB_WEB_PASSWORD` | - | Web 控制台 Basic Auth 登录密码（强烈建议修改） |
 | `YYB_KEEPALIVE_INTERVAL` | `30m` | 账号凭据后台保活检查轮询间隔（设为 `0` 可关闭后台保活） |
 | `YYB_KEEPALIVE_AHEAD` | `45m` | 凭据提前续期时间阈值 |
+| `QL_URL` | `http://qinglong:5700` | 青龙面板地址（容器同网络下填写容器名） |
+| `QL_CLIENT_ID` | - | 青龙 OpenAPI 应用 Client ID |
+| `QL_CLIENT_SECRET` | - | 青龙 OpenAPI 应用 Client Secret |
+| `YYB_QINGLONG_SERVER` | `yyb:8000` | 青龙面板环境变量中注入的 YYB 服务回调地址 |
 
 ---
 
 ## 文件结构说明
 
-- `Dockerfile`: 多阶段构建文件，支持自动拉取源码编译并打包为轻量 Alpine 镜像。
-- `docker-compose.yml`: Docker Compose 一键部署脚本（已默认指向 `crosscc/yyb-go-enhanced:latest`）。
-- `.env.example`: 环境变量模板文件。
-- `data/`: 持久化挂载目录（SQLite 数据库与日志存储于此）。
+- `Dockerfile`: 多阶段构建文件，静态编译并打包为极简 Alpine 镜像，内置 `ENTRYPOINT` 与 `CMD` 参数。
+- `docker-compose.yml`: Docker Compose 一键部署脚本（映射挂载数据库至 `./data`）。
+- `.env.example`: 完整环境变量模板文件（包含青龙配置）。
+- `.gitignore`: 忽略 `.env` 和 `data/` 目录，防止敏感信息与数据库提交至 Git 仓库。
+- `data/`: 持久化挂载目录（保存 SQLite 数据库 `yyb.db`）。
