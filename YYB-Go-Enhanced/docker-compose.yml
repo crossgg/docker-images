@@ -11,7 +11,7 @@
 
 services:
   yyb-go:
-    image: 525815266/yyb-go-enhanced:latest
+    image: crosscc/yyb-go-enhanced:latest
     build:
       context: .
       dockerfile: Dockerfile
