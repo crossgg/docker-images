@@ -2,28 +2,57 @@
 # YYB-Go-Enhanced Docker Compose 部署配置
 # 
 # 部署说明：
-#   1. 若与青龙面板共享 Docker 网络，请先创建网络：docker network create qinglong_default
-#   2. 复制配置文件并修改密码：cp .env.example .env
+#   1. 若与青龙/呆呆面板共享 Docker 网络，请先创建对应外部网络：
+#      - 青龙面板: docker network create qinglong_default
+#      - 呆呆面板: docker network create daidai-panel_default
+#   2. 复制配置文件并修改参数：cp .env.example .env
 #   3. 启动容器：docker compose up -d
 # ============================================================================
 
 services:
-  yyb:
-    image: crosscc/yyb-go-enhanced:latest
+  yyb-go:
+    image: 525815266/yyb-go-enhanced:latest
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: yyb
+    container_name: yyb-go
     restart: unless-stopped
+    command:
+      - -host
+      - 0.0.0.0
+      - -port
+      - "8000"
+      - -resource-root
+      - /app/resource
+      - -keepalive-interval
+      - ${YYB_KEEPALIVE_INTERVAL:-1m}
+      - -keepalive-ahead
+      - ${YYB_KEEPALIVE_AHEAD:-45m}
     env_file:
       - .env
+    environment:
+      YYB_AUTH_DRIVER: ${YYB_AUTH_DRIVER:-sqlite}
+      YYB_AUTH_DSN: ${YYB_AUTH_DSN:-}
+      YYB_ADMIN_USER: ${YYB_ADMIN_USER:-}
+      YYB_ADMIN_PASSWORD: ${YYB_ADMIN_PASSWORD:-}
+      YYB_COOKIE_SECURE: ${YYB_COOKIE_SECURE:-false}
+      PANEL_TYPE: ${PANEL_TYPE:-qinglong}
+      QL_URL: ${QL_URL:-}
+      QL_CLIENT_ID: ${QL_CLIENT_ID:-}
+      QL_CLIENT_SECRET: ${QL_CLIENT_SECRET:-}
+      DAIDAI_URL: ${DAIDAI_URL:-}
+      DAIDAI_APP_KEY: ${DAIDAI_APP_KEY:-}
+      DAIDAI_APP_SECRET: ${DAIDAI_APP_SECRET:-}
+      YYB_QINGLONG_SERVER: ${YYB_QINGLONG_SERVER:-}
     ports:
       - "${YYB_PORT:-8000}:8000"
     volumes:
       - ./data:/app/resource/db
     networks:
-      - qinglong_default
+      #- default
+      - ${PANEL_NETWORK:-qinglong_default}
 
 networks:
-  qinglong_default:
+  panel_network:
+    name: ${PANEL_NETWORK:-qinglong_default}
     external: true
