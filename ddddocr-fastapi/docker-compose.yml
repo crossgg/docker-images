@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  ddddocr-api:
+  ddddocr-fastapi:
     build: .
     ports:
       - "8000:8000"

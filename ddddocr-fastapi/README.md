@@ -1,7 +1,7 @@
 
 
 ```shell
-docker run -d -p 9898:8000 --name ddddocr-api --restart=unless-stopped crosscc/ddddocr-api 
+docker run -d -p 9898:8000 --name ddddocr-api --restart=unless-stopped crosscc/ddddocr-fastapi
 ```
 直接解析base64格式图纸，而不要上传图片的，nodejs脚本：
 ```nodejs

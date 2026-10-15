@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  go-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: go-runner:latest
+    container_name: ${CONTAINER_NAME:-my-go-app}
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ${DATA_DIR:-./data}:/app
+    environment:
+      - APP_NAME=${APP_NAME}
+      - APP_ARGS=${APP_ARGS}
+      - TZ=${TZ:-Asia/Shanghai}
+      - PRE_RUN_CMD=${PRE_RUN_CMD:-}
+    ports:
+      - "${HOST_PORT}:${CONTAINER_PORT}"
