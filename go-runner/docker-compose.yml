@@ -5,7 +5,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: go-runner:latest
+    env_file:
+      - .env
+    image: crosscc/go-runner:latest
     container_name: ${CONTAINER_NAME:-my-go-app}
     restart: unless-stopped
     working_dir: /app

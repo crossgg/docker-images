@@ -38,7 +38,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o mya
 
 假设你编译出的二进制为 `myapp`，并且你的配置文件 `config.yaml` 存放在宿主机的 `D:/my-go-project`（或 Linux 的 `/data/my-go-project`）目录下。
 
-### 方式 1：使用 Docker 命令行直接挂载运行（推荐）
+### 方式 1：使用 Docker 命令行直接挂载运行
 
 ```bash
 docker run -d \
@@ -48,17 +48,14 @@ docker run -d \
   -e APP_NAME=myapp \
   -e APP_ARGS="-c /app/config.yaml --port 8080" \
   -p 8080:8080 \
-  go-runner:latest
+  crosscc/go-runner:latest
 ```
 
 ---
 
 ### 方式 2：使用 Docker Compose 运行（推荐搭配 .env）
 
-复制并编辑 `.env.example` 为 `.env`：
-```bash
-cp .env.example .env
-```
+编辑 `.env`：
 根据实际需求修改 `.env` 变量：
 ```env
 CONTAINER_NAME=my-go-app
@@ -79,7 +76,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: go-runner:latest
+    env_file:
+      - .env
+    image: crosscc/go-runner:latest
     container_name: ${CONTAINER_NAME:-my-go-app}
     restart: unless-stopped
     working_dir: /app
@@ -110,7 +109,7 @@ docker run -d \
   --name my-go-service \
   -v D:/my-go-project:/app \
   -p 8080:8080 \
-  go-runner:latest ./myapp -c /app/config.yaml
+  crosscc/go-runner:latest ./myapp -c /app/config.yaml
 ```
 
 ---
