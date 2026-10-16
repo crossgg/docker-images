@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
     working_dir: /app
     volumes:
-      - ${DATA_DIR:-./data}:/app
+      - ${DATA_DIR:-./app}:/app
     environment:
       - APP_NAME=${APP_NAME}
       - APP_ARGS=${APP_ARGS}
